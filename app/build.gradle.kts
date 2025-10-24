@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlinx.serialization)
+    id("com.google.devtools.ksp")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -60,6 +62,23 @@ dependencies {
 
     //Compose Navigation
     implementation (libs.androidx.navigation.compose)
+
+    // room database
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    //ViewModel
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    //Hilt Dagger
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+
+
+
 
 
 

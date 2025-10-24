@@ -96,7 +96,7 @@ fun DashboardScreenView() {
         ) {
             NavHost(
                 navController = navController,
-                startDestination = MainNavScreen.Home.route,
+                startDestination = MainNavScreen.Profile.route,
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable(MainNavScreen.Home.route) { HomeScreenView() }

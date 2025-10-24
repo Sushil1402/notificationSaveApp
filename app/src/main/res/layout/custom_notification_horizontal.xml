@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+   >
+
+    <!-- Horizontal container for app icons -->
+    <LinearLayout
+        android:id="@+id/notification_icons_container"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Total count text -->
+    <TextView
+        android:id="@+id/notification_count_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 new notifications"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingTop="4dp"/>
+</LinearLayout>
