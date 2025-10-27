@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">Notification Show</string>
+
+
+    <!-- Home Screen -->
+    <string name="homeScreenTitle">Notifications</string>
+    <string name="unread_notification_holder">%s unread notifications</string>
+    <string name="view_more_notification_holder">View %s more notifications</string>
+    <string name="notification_ready">Notifications Ready!</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="your_notifications_are_bing_saved_automatically">Your notifications are being saved automatically</string>
+    <string name="tap_to_enable_notification_access">Tap to enable notification access</string>
+    <string name="enable">Enable</string>
+    <string name="empty_notification_description">No unread notification</string>
+    <string name="empty_notification_small_description">No new notification</string>
+
+
 </resources>

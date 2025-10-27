@@ -1,8 +1,8 @@
 package com.jetpackComposeTest1
 
 import android.app.Application
-import com.jetpackComposeTest1.utils.NotificationUtils.createNotificationAliveServiceChannel
-import com.jetpackComposeTest1.utils.NotificationUtils.createNotificationChannel
+import com.jetpackComposeTest1.ui.utils.NotificationUtils.createNotificationAliveServiceChannel
+import com.jetpackComposeTest1.ui.utils.NotificationUtils.createNotificationChannel
 
 import dagger.hilt.android.HiltAndroidApp
 

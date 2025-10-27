@@ -5,8 +5,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import com.jetpackComposeTest1.data.repository.database.NotificationDBRepository
 import com.jetpackComposeTest1.db.NotificationDao
-import com.jetpackComposeTest1.utils.NotificationUtils
+import com.jetpackComposeTest1.ui.utils.NotificationUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ import javax.inject.Inject
 class NotificationForegroundService : Service() {
 
     @Inject
-    lateinit var notificationDao: NotificationDao
+    lateinit var notificationDBRepo: NotificationDBRepository
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -48,8 +49,8 @@ class NotificationForegroundService : Service() {
 
         // Observe DB updates
         serviceScope.launch {
-            notificationDao.getAllNotifications()
-                .map { list -> list.filter { it.message.isNotBlank() } }
+            notificationDBRepo.getAllNotifications()
+                .map { list -> list.filter { it.text.isNotBlank() } }
                 .distinctUntilChanged()
                 .collect { messages ->
                     val notification = NotificationUtils.buildForegroundNotificationWithIconsAndCount(
