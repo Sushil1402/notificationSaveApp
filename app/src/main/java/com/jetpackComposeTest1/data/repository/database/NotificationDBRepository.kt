@@ -8,4 +8,9 @@ interface NotificationDBRepository {
     suspend fun insertNotifications(notifications: List<NotificationEntity>)
     fun getAllNotifications(): Flow<List<NotificationEntity>>
     fun getNotificationsByReadStatus(isRead: Boolean): Flow<List<NotificationEntity>>
+    
+    // New methods for notification detail screen
+    fun getNotificationsByPackageName(packageName: String): Flow<List<NotificationEntity>>
+    suspend fun markAsRead(id: Long)
+    suspend fun deleteNotification(id: Long)
 }

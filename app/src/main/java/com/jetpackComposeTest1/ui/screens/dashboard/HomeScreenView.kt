@@ -2,11 +2,18 @@ package com.jetpackComposeTest1.ui.screens.dashboard
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,12 +25,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,10 +41,15 @@ import com.jetpackComposeTest1.model.notification.NotificationItem
 import com.jetpackComposeTest1.services.MyNotificationListener
 import com.jetpackComposeTest1.services.NotificationForegroundService
 import com.jetpackComposeTest1.ui.components.PermissionBottomSheet
+import com.jetpackComposeTest1.ui.components.SearchEmptyStateMessage
+import com.jetpackComposeTest1.ui.components.SearchToolBar
+import com.jetpackComposeTest1.ui.navigation.AllUnreadNotificationsRoute
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
+import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.NotificationHomeViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
+import com.jetpackComposeTest1.ui.theme.unreadIndicatorColor
 import com.jetpackComposeTest1.ui.utils.NotificationUtils
 import com.jetpackComposeTest1.ui.utils.PermissionManager
 
@@ -77,6 +89,8 @@ fun HomeScreenView(
     // Collect reactive data from ViewModel
     val groupedNotifications by homeScreenVM.groupedNotifications.collectAsState()
     val unreadCount by homeScreenVM.unreadCount.collectAsState()
+    val searchQuery by homeScreenVM.searchQuery.collectAsState()
+    val isSearchActive by homeScreenVM.isSearchActive.collectAsState()
 
 
     Box(
@@ -87,10 +101,46 @@ fun HomeScreenView(
         Column {
             // Header Section
             NotificationHeader(
+                navToScreen,
                 context,
                 unreadCount = unreadCount,
-                onSearchClick = { /* Navigate to search */ }
+                onSearchClick = { homeScreenVM.toggleSearch() }
             )
+
+            // Search Bar
+            AnimatedVisibility(
+                visible = isSearchActive,
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(durationMillis = 300)
+                ) + fadeIn(animationSpec = tween(durationMillis = 300)),
+                exit = slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(durationMillis = 300)
+                ) + fadeOut(animationSpec = tween(durationMillis = 300))
+            ) {
+                Column {
+                    SearchToolBar(
+                        context = context,
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = { homeScreenVM.updateSearchQuery(it) },
+                        onClearSearch = { homeScreenVM.clearSearch() }
+                    )
+
+                    // Search results count
+                    if (searchQuery.isNotEmpty()) {
+                        Text(
+                            text = context.getString(
+                                R.string.found_search_notification,
+                                "${groupedNotifications.sumOf { it.notificationCount }}"
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
 
             // Permission Status Banner
             if (!permissionState.allGranted) {
@@ -124,19 +174,35 @@ fun HomeScreenView(
                 ) {
                     if (groupedNotifications.isEmpty()) {
                         // Empty state
-                        EmptyStateMessage(context)
+                        if (isSearchActive && searchQuery.isNotEmpty()) {
+                            SearchEmptyStateMessage(context)
+                        } else {
+                            EmptyStateMessage(context)
+                        }
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(groupedNotifications) { group ->
+                            itemsIndexed(groupedNotifications) { index, group ->
+
                                 NotificationGroupCard(
                                     context,
                                     group = group,
-                                    onGroupClick = { /* Open group details */ },
-                                    onNotificationClick = { /* Open notification details */ }
+                                    onGroupClick = {
+                                        // Navigate to notification detail screen
+                                        navToScreen.invoke(
+                                            NotificationDetailRoute(
+                                                packageName = group.packageName,
+                                                appName = group.appName
+                                            )
+                                        )
+                                    },
+                                    onNotificationClick = { /* Open notification details */ },
+                                    modifier = if (index == groupedNotifications.size - 1) Modifier.padding(
+                                        bottom = 200.dp
+                                    ) else Modifier
                                 )
                             }
                         }
@@ -145,7 +211,6 @@ fun HomeScreenView(
             }
         }
 
-        // Floating Action Button - only show when there are notifications
         if (groupedNotifications.isNotEmpty()) {
             FloatingActionButton(
                 onClick = { homeScreenVM.refreshNotifications(context) },
@@ -179,6 +244,7 @@ fun HomeScreenView(
 
 @Composable
 fun NotificationHeader(
+    navToScreen: (AppNavigationRoute) -> Unit,
     context: Context,
     unreadCount: Int,
     onSearchClick: () -> Unit
@@ -217,6 +283,27 @@ fun NotificationHeader(
                 tint = Color.White
             )
         }
+        Box {
+            IconButton(onClick = { navToScreen(AllUnreadNotificationsRoute) }) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "show all unread notification",
+                    tint = Color.White
+                )
+            }
+
+            // Circular indicator for unread notifications - positioned to overlap the icon
+            if (unreadCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(unreadIndicatorColor, CircleShape)
+                        .align(Alignment.TopEnd)
+                        .padding(end = 2.dp, top = 2.dp)
+                )
+            }
+        }
+
 
         IconButton(onClick = onSearchClick) {
             Icon(
@@ -233,12 +320,14 @@ fun NotificationGroupCard(
     context: Context,
     group: NotificationGroup,
     onGroupClick: () -> Unit,
-    onNotificationClick: (NotificationItem) -> Unit
+    onNotificationClick: (NotificationItem) -> Unit,
+    modifier: Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        onClick = onGroupClick
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -274,7 +363,10 @@ fun NotificationGroupCard(
                 }
 
                 Text(
-                    text = "${group.notificationCount} notifications",
+                    text = context.getString(
+                        R.string.notification_count,
+                        "${group.notificationCount}"
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -328,7 +420,7 @@ fun NotificationItemRow(
                 modifier = Modifier
                     .size(8.dp)
                     .background(
-                        color = main_appColor,
+                        color = unreadIndicatorColor,
                         shape = RoundedCornerShape(4.dp)
                     )
             )
@@ -400,7 +492,9 @@ fun PermissionStatusBanner(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (permissionState.allGranted) context.getString(R.string.notification_ready) else context.getString(R.string.permission_required),
+                    text = if (permissionState.allGranted) context.getString(R.string.notification_ready) else context.getString(
+                        R.string.permission_required
+                    ),
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -410,7 +504,7 @@ fun PermissionStatusBanner(
                     text = if (permissionState.allGranted)
                         context.getString(R.string.your_notifications_are_bing_saved_automatically)
                     else
-                       context.getString(R.string.tap_to_enable_notification_access),
+                        context.getString(R.string.tap_to_enable_notification_access),
                     color = Color.White.copy(alpha = 0.9f),
                     fontSize = 12.sp
                 )

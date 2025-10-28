@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +28,34 @@ class NotificationHomeViewModel @Inject constructor(
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
 
-    // Remove init block since we need context
+    // Search functionality
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
+
+    private val _filteredNotifications = MutableStateFlow<List<NotificationGroup>>(emptyList())
+    val filteredNotifications: StateFlow<List<NotificationGroup>> = _filteredNotifications.asStateFlow()
+
+    // Original notifications for filtering
+    private val _allGroupedNotifications = MutableStateFlow<List<NotificationGroup>>(emptyList())
+
+    init {
+        // Combine search query with all notifications to filter
+        viewModelScope.launch {
+            combine(_searchQuery, _allGroupedNotifications) { query, notifications ->
+                if (query.isBlank()) {
+                    notifications
+                } else {
+                    filterNotifications(notifications, query)
+                }
+            }.collect { filtered ->
+                _filteredNotifications.value = filtered
+                _groupedNotifications.value = filtered
+            }
+        }
+    }
 
     fun loadGroupedNotifications(context: Context) {
         viewModelScope.launch {
@@ -47,6 +75,7 @@ class NotificationHomeViewModel @Inject constructor(
                         }
                         
                         NotificationGroup(
+                            packageName = packageName,
                             appName = appName, // This is now the actual app name
                             appIcon = Utils.getAppIcon(context, packageName),
                             appColor = getAppColor(appName),
@@ -67,7 +96,7 @@ class NotificationHomeViewModel @Inject constructor(
                     }
                     .sortedByDescending { it.notificationCount }
 
-                _groupedNotifications.value = grouped
+                _allGroupedNotifications.value = grouped
                 _unreadCount.value = unreadNotifications.size
             }
         }
@@ -114,5 +143,54 @@ class NotificationHomeViewModel @Inject constructor(
     }
 
     fun isAppSelectionCompleted():Boolean = sharedPreferences.isAppSelectionCompleted()
+
+    // Search functionality methods
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleSearch() {
+        _isSearchActive.value = !_isSearchActive.value
+        if (!_isSearchActive.value) {
+            _searchQuery.value = ""
+        }
+    }
+
+    fun clearSearch() {
+        _searchQuery.value = ""
+        _isSearchActive.value = false
+    }
+
+    private fun filterNotifications(notifications: List<NotificationGroup>, query: String): List<NotificationGroup> {
+        val lowercaseQuery = query.lowercase().trim()
+        if (lowercaseQuery.isEmpty()) return notifications
+
+        return notifications.filter { group ->
+            // Filter by app name
+            val appNameMatches = group.appName.lowercase().contains(lowercaseQuery)
+            
+            // Filter by notification content
+            val notificationMatches = group.recentNotifications.any { notification ->
+                notification.title.lowercase().contains(lowercaseQuery) ||
+                notification.message.lowercase().contains(lowercaseQuery)
+            }
+            
+            appNameMatches || notificationMatches
+        }.map { group ->
+            // If app name doesn't match but notifications do, filter the notifications within the group
+            if (group.appName.lowercase().contains(lowercaseQuery)) {
+                group
+            } else {
+                val filteredNotifications = group.recentNotifications.filter { notification ->
+                    notification.title.lowercase().contains(lowercaseQuery) ||
+                    notification.message.lowercase().contains(lowercaseQuery)
+                }
+                group.copy(
+                    recentNotifications = filteredNotifications,
+                    notificationCount = filteredNotifications.size
+                )
+            }
+        }.filter { it.notificationCount > 0 }
+    }
 }
 

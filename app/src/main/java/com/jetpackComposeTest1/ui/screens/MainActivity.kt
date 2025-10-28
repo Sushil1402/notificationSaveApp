@@ -1,7 +1,6 @@
 package com.jetpackComposeTest1.presentation
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,18 +9,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.DashboardScreenRoute
+import com.jetpackComposeTest1.ui.navigation.AllUnreadNotificationsRoute
+import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
 import com.jetpackComposeTest1.ui.screens.DashboardScreenView
+import com.jetpackComposeTest1.ui.screens.dashboard.AllUnreadNotificationsScreen
 import com.jetpackComposeTest1.ui.navigation.LoginScreenRoute
 import com.jetpackComposeTest1.ui.screens.LoginScreenView
 import com.jetpackComposeTest1.ui.screens.appselection.AppSelectionScreen
+import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailScreen
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
-import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -58,6 +59,23 @@ class MainActivity : ComponentActivity() {
                             DashboardScreenView(){navToScreen->
                                 navController.navigate(navToScreen)
                             }
+                        }
+
+                        composable<NotificationDetailRoute> { backStackEntry ->
+                            val args = backStackEntry.toRoute<NotificationDetailRoute>()
+                            NotificationDetailScreen(
+                                packageName = args.packageName,
+                                appName = args.appName,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        composable<AllUnreadNotificationsRoute> {
+                            AllUnreadNotificationsScreen(
+                                navController = navController
+                            )
                         }
 
                     }

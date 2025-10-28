@@ -37,3 +37,12 @@ object SettingScreenRoute:AppNavigationRoute
 
 @Serializable
 object AppSelectionScreenRoute:AppNavigationRoute
+
+@Serializable
+data class NotificationDetailRoute(
+    val packageName: String,
+    val appName: String
+): AppNavigationRoute
+
+@Serializable
+object AllUnreadNotificationsRoute: AppNavigationRoute

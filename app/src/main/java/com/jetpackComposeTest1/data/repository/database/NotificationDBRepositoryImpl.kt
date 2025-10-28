@@ -22,4 +22,16 @@ class NotificationDBRepositoryImpl @Inject constructor(private val notificationD
     override fun getNotificationsByReadStatus(isRead: Boolean): Flow<List<NotificationEntity>> {
         return notificationDao.getNotificationsByReadStatus(isRead = isRead)
     }
+
+    override fun getNotificationsByPackageName(packageName: String): Flow<List<NotificationEntity>> {
+        return notificationDao.getNotificationsByPackage(packageName)
+    }
+
+    override suspend fun markAsRead(id: Long) {
+        notificationDao.updateReadStatus(id, true)
+    }
+
+    override suspend fun deleteNotification(id: Long) {
+        notificationDao.deleteNotificationById(id)
+    }
 }
