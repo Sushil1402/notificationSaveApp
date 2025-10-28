@@ -195,7 +195,8 @@ fun HomeScreenView(
                                         navToScreen.invoke(
                                             NotificationDetailRoute(
                                                 packageName = group.packageName,
-                                                appName = group.appName
+                                                appName = group.appName,
+                                                isFromNotification = true
                                             )
                                         )
                                     },

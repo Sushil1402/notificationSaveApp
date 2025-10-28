@@ -19,14 +19,23 @@ fun GroupNameDialog(
     isVisible: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
+    initialName: String = "",
     title: String = "Create New Group",
     placeholder: String = "Enter group name",
     confirmButtonText: String = "Create",
     cancelButtonText: String = "Cancel"
 ) {
+    // Text Field state
+    var textFieldValue by remember(initialName) { 
+        mutableStateOf(TextFieldValue(initialName)) 
+    }
+    
     if (isVisible) {
         Dialog(
-            onDismissRequest = onDismiss,
+            onDismissRequest = {
+                textFieldValue = TextFieldValue("")
+                onDismiss()
+            },
             properties = DialogProperties(
                 dismissOnBackPress = true,
                 dismissOnClickOutside = true
@@ -63,9 +72,6 @@ fun GroupNameDialog(
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
                     
-                    // Text Field
-                    var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
-                    
                     OutlinedTextField(
                         value = textFieldValue,
                         onValueChange = { textFieldValue = it },
@@ -90,7 +96,10 @@ fun GroupNameDialog(
                     ) {
                         // Cancel Button
                         OutlinedButton(
-                            onClick = onDismiss,
+                            onClick = {
+                                textFieldValue = TextFieldValue("")
+                                onDismiss()
+                            },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = Color.Gray

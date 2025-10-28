@@ -165,7 +165,25 @@ class GroupsViewModel @Inject constructor(
             }
         }
     }
-    
+
+
+    fun deleteGroup(groupId: String) {
+        viewModelScope.launch {
+            if (groupId !in listOf("unread", "read", "muted")) {
+                // Only allow deletion of custom groups
+                groupRepository.deleteGroup(groupId)
+            }
+        }
+    }
+
+    fun renameGroup(groupId: String, newName: String) {
+        viewModelScope.launch {
+            if (groupId !in listOf("unread", "read", "muted")) {
+                // Only allow renaming of custom groups
+                groupRepository.updateGroupName(groupId, newName)
+            }
+        }
+    }
 
 }
 

@@ -46,6 +46,7 @@ import com.jetpackComposeTest1.ui.utils.toImageBitmap
 fun NotificationDetailScreen(
     packageName: String,
     appName: String,
+    isFromNotification:Boolean,
     onNavigateBack: () -> Unit,
     viewModel: NotificationDetailViewModel = hiltViewModel()
 ) {

@@ -49,8 +49,15 @@ data class GroupAppSelectionRoute(
 @Serializable
 data class NotificationDetailRoute(
     val packageName: String,
-    val appName: String
+    val appName: String,
+    val isFromNotification:Boolean = false
 ): AppNavigationRoute
 
 @Serializable
 object AllUnreadNotificationsRoute: AppNavigationRoute
+
+@Serializable
+data class GroupAppsRoute(
+    val groupId: String,
+    val groupName: String
+): AppNavigationRoute

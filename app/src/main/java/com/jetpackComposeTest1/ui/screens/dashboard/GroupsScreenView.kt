@@ -1,9 +1,9 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,15 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.jetpackComposeTest1.model.notification.NotificationGroupData
 import com.jetpackComposeTest1.ui.components.GroupNameDialog
+import com.jetpackComposeTest1.ui.components.AppAlertDialog
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.GroupAppSelectionRoute
+import com.jetpackComposeTest1.ui.navigation.GroupAppsRoute
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.GroupsViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.GroupIconUtils
@@ -40,6 +39,11 @@ fun GroupsScreenView(
 
     var showGroupDialog by remember { mutableStateOf(false) }
     var groupName by remember { mutableStateOf("") }
+    var showRenameDialog by remember { mutableStateOf(false) }
+    var renameGroupName by remember { mutableStateOf("") }
+    var selectedGroupId by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteGroupName by remember { mutableStateOf("") }
 
 
 
@@ -92,9 +96,23 @@ fun GroupsScreenView(
                     itemsIndexed(groups) { index, group ->
                         NotificationGroupItem(
                             group = group,
-                            onGroupClick = { /* Open group details */ },
+                            onGroupClick = { 
+                                // Navigate to group apps screen
+                                navToScreen.invoke(
+                                    GroupAppsRoute(groupId = group.id, groupName = group.name)
+                                )
+                            },
                             onToggleMute = { viewModel.toggleGroupMute(group.id) },
-                            onEditGroup = { /* Edit group settings */ },
+                            onRenameGroup = { 
+                                selectedGroupId = group.id
+                                renameGroupName = group.name
+                                showRenameDialog = true 
+                            },
+                            onDeleteGroup = { 
+                                selectedGroupId = group.id
+                                deleteGroupName = group.name
+                                showDeleteDialog = true 
+                            },
                             modifier = if (index == groups.size - 1) Modifier.padding(
                                 bottom = 200.dp
                             ) else Modifier
@@ -135,6 +153,49 @@ fun GroupsScreenView(
                 )
             }
         )
+
+        // Rename Group Dialog
+        GroupNameDialog(
+            isVisible = showRenameDialog,
+            initialName = renameGroupName,
+            onDismiss = {
+                showRenameDialog = false
+                renameGroupName = ""
+                selectedGroupId = ""
+            },
+            onConfirm = { name ->
+                viewModel.renameGroup(selectedGroupId, name)
+                showRenameDialog = false
+                renameGroupName = ""
+                selectedGroupId = ""
+            }
+        )
+
+        // Delete Confirmation Dialog
+        if (showDeleteDialog) {
+            AppAlertDialog(
+                onDismissRequest = {
+                    showDeleteDialog = false
+                    deleteGroupName = ""
+                    selectedGroupId = ""
+                },
+                title = "Delete Group",
+                text = "Are you sure you want to delete \"$deleteGroupName\"? This action cannot be undone.",
+                confirmButtonText = "Delete",
+                dismissButtonText = "Cancel",
+                confirmButton = {
+                    viewModel.deleteGroup(selectedGroupId)
+                    showDeleteDialog = false
+                    deleteGroupName = ""
+                    selectedGroupId = ""
+                },
+                dismissButton = {
+                    showDeleteDialog = false
+                    deleteGroupName = ""
+                    selectedGroupId = ""
+                }
+            )
+        }
     }
 }
 
@@ -144,10 +205,13 @@ fun NotificationGroupItem(
     group: NotificationGroupData,
     onGroupClick: () -> Unit,
     onToggleMute: () -> Unit,
-    onEditGroup: () -> Unit
+    onRenameGroup: () -> Unit,
+    onDeleteGroup: () -> Unit
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onGroupClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -208,34 +272,87 @@ fun NotificationGroupItem(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    IconButton(onClick = onToggleMute) {
-                        Icon(
-                            imageVector = if (group.isMuted) Icons.Default.Info else Icons.Default.Info,
-                            contentDescription = if (group.isMuted) "Unmute" else "Mute",
-                            tint = if (group.isMuted) Color.Red else Color.Gray
+                    // Show count badge for system groups
+                    if (group.id in listOf("unread", "read", "muted")) {
+                        SmallCountBadge(
+                            count = group.totalNotifications,
+                            color = group.color
                         )
                     }
-                    IconButton(onClick = onEditGroup) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = Color.Gray
-                        )
+                    
+                    // Show mute/unmute toggle for custom groups only
+                    if (group.id !in listOf("unread", "read", "muted")) {
+                        IconButton(onClick = onToggleMute) {
+                            Icon(
+                                imageVector = if (group.isMuted) Icons.Default.Notifications else Icons.Default.Notifications,
+                                contentDescription = if (group.isMuted) "Unmute" else "Mute",
+                                tint = if (group.isMuted) Color.Red else Color.Gray
+                            )
+                        }
+                    }
+                    
+                    // Show three-dot menu for custom groups only
+                    if (group.id !in listOf("unread", "read", "muted")) {
+                        var showDropdownMenu by remember { mutableStateOf(false) }
+                        
+                        Box {
+                            IconButton(onClick = { showDropdownMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "More options",
+                                    tint = Color.Gray
+                                )
+                            }
+                            
+                            DropdownMenu(
+                                expanded = showDropdownMenu,
+                                onDismissRequest = { showDropdownMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Rename") },
+                                    onClick = {
+                                        showDropdownMenu = false
+                                        onRenameGroup()
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Rename"
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Delete") },
+                                    onClick = {
+                                        showDropdownMenu = false
+                                        onDeleteGroup()
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete"
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Group Stats
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                GroupStatItem("Total", group.totalNotifications.toString())
-                GroupStatItem("Unread", group.unreadNotifications.toString())
-                GroupStatItem("Today", group.todayNotifications.toString())
-                GroupStatItem("Apps", group.appCount.toString())
+            // Group Stats - only for custom groups
+            if (group.id !in listOf("unread", "read", "muted")) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    GroupStatItem("Total", group.totalNotifications.toString())
+                    GroupStatItem("Unread", group.unreadNotifications.toString())
+                    GroupStatItem("Today", group.todayNotifications.toString())
+                    GroupStatItem("Apps", group.appCount.toString())
+                }
             }
 
             // Group Type Badge
@@ -243,8 +360,9 @@ fun NotificationGroupItem(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                GroupTypeChip(group.type)
-                if (group.isMuted) {
+                if (group.id == "muted") {
+                    GroupTypeChip("Muted", Color.Red)
+                } else if (group.id !in listOf("unread", "read", "muted") && group.isMuted) {
                     GroupTypeChip("Muted", Color.Red)
                 }
             }
@@ -288,6 +406,29 @@ fun GroupTypeChip(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.bodySmall,
             color = color
+        )
+    }
+}
+
+@Composable
+fun SmallCountBadge(
+    count: Int,
+    color: Color
+) {
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .background(
+                color = color,
+                shape = RoundedCornerShape(10.dp)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
         )
     }
 }
