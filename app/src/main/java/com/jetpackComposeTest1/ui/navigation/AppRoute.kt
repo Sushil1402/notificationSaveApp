@@ -39,6 +39,14 @@ object SettingScreenRoute:AppNavigationRoute
 object AppSelectionScreenRoute:AppNavigationRoute
 
 @Serializable
+data class GroupAppSelectionRoute(
+    val groupName: String,
+    val groupId: String? = null
+): AppNavigationRoute
+
+
+
+@Serializable
 data class NotificationDetailRoute(
     val packageName: String,
     val appName: String

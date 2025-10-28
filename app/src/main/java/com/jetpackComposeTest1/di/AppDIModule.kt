@@ -5,7 +5,11 @@ import androidx.room.Room
 import com.jetpackComposeTest1.data.repository.database.AllAppRepository
 import com.jetpackComposeTest1.data.repository.database.NotificationDBRepository
 import com.jetpackComposeTest1.data.repository.database.NotificationDBRepositoryImpl
+import com.jetpackComposeTest1.data.repository.database.NotificationGroupRepository
 import com.jetpackComposeTest1.data.local.database.AllAppDao
+import com.jetpackComposeTest1.data.local.database.NotificationGroupDao
+import com.jetpackComposeTest1.data.local.database.AppGroupMembershipDao
+import com.jetpackComposeTest1.data.local.database.DatabaseMigrations
 import com.jetpackComposeTest1.db.NotificationDao
 import com.jetpackComposeTest1.db.NotificationDataBase
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
@@ -30,7 +34,9 @@ class AppDIModule {
             context,
             NotificationDataBase::class.java,
             Constants.DATABASE_NAME
-        ).build()
+        )
+        .addMigrations(DatabaseMigrations.MIGRATION_1_2)
+        .build()
     }
 
     @Provides
@@ -43,6 +49,14 @@ class AppDIModule {
 
     @Provides
     @Singleton
+    fun provideNotificationGroupDao(db: NotificationDataBase): NotificationGroupDao = db.notificationGroupDao
+
+    @Provides
+    @Singleton
+    fun provideAppGroupMembershipDao(db: NotificationDataBase): AppGroupMembershipDao = db.appGroupMembershipDao
+
+    @Provides
+    @Singleton
     fun provideNotificationRepository(notificationDao: NotificationDao): NotificationDBRepository {
         return NotificationDBRepositoryImpl(notificationDao)
     }
@@ -51,6 +65,15 @@ class AppDIModule {
     @Singleton
     fun provideAllAppRepository(allAppDao: AllAppDao): AllAppRepository {
         return AllAppRepository(allAppDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationGroupRepository(
+        groupDao: NotificationGroupDao,
+        membershipDao: AppGroupMembershipDao
+    ): NotificationGroupRepository {
+        return NotificationGroupRepository(groupDao, membershipDao)
     }
 
     @Provides

@@ -1,5 +1,6 @@
 package com.jetpackComposeTest1.ui.screens.appselection
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,16 +30,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.AppSelectionViewModel
-import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.AppInfo
+import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.DatabaseAppSelectionViewModel
+import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.DatabaseAppInfo
 import com.jetpackComposeTest1.ui.utils.NotificationUtils.getAppIconBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppSelectionScreen(
+fun DatabaseAppSelectionScreen(
+    groupName:String,
     onNavigateBack: () -> Unit,
-    onNavigateToDashboard: () -> Unit,
-    viewModel: AppSelectionViewModel = hiltViewModel()
+    viewModel: DatabaseAppSelectionViewModel = hiltViewModel(),
+    // Parameters for reusability
+    title: String = "Select Apps for Group",
+    description: String = "Choose apps to add to your notification group.",
+    confirmButtonText: String = "Add to Group"
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
@@ -51,7 +56,6 @@ fun AppSelectionScreen(
     val filteredApps = remember(apps, searchQuery) {
         viewModel.getFilteredApps()
     }
-
 
     Column(
         modifier = Modifier
@@ -79,7 +83,7 @@ fun AppSelectionScreen(
                     )
                 } else {
                     Text(
-                        text = "Save notifications",
+                        text = title,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
@@ -123,7 +127,7 @@ fun AppSelectionScreen(
 
         // Description text
         Text(
-            text = "Notifications from selected apps will be saved on Notisave.",
+            text = description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(16.dp)
@@ -179,7 +183,9 @@ fun AppSelectionScreen(
             ) {
                 Button(
                     onClick = {
-                        onNavigateToDashboard()
+                        val selectedApps = filteredApps.filter { it.isEnabled }.map { it.packageName }
+                        viewModel.createCustomGroup(groupName = groupName, selectedApps = selectedApps)
+                        onNavigateBack() // Navigate back after creating the group
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -189,7 +195,7 @@ fun AppSelectionScreen(
                     )
                 ) {
                     Text(
-                        text = "Continue with $enabledAppCount selected app${if (enabledAppCount > 1) "s" else ""}",
+                        text = "$confirmButtonText with $enabledAppCount selected app${if (enabledAppCount > 1) "s" else ""}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -258,6 +264,35 @@ fun AppSelectionScreen(
                     )
                 }
             }
+        } else if (filteredApps.isEmpty()) {
+            // No apps in database
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "No apps",
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No apps in database",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Apps will appear here after notifications are saved",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -268,7 +303,7 @@ fun AppSelectionScreen(
                     val appInfo = filteredApps[index]
                     val isLastItem = index == filteredApps.size - 1
                     
-                    AppItem(
+                    DatabaseAppItem(
                         appInfo = appInfo,
                         onToggleChanged = { isEnabled ->
                             viewModel.onAppToggleChanged(appInfo.packageName, isEnabled)
@@ -294,8 +329,8 @@ fun AppSelectionScreen(
 }
 
 @Composable
-private fun AppItem(
-    appInfo: AppInfo,
+private fun DatabaseAppItem(
+    appInfo: DatabaseAppInfo,
     onToggleChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -377,9 +412,10 @@ private fun AppItem(
                         overflow = TextOverflow.Ellipsis
                     )
                     
-                    if (appInfo.isSystemApp) {
+                    // Show notification count if available
+                    if (appInfo.notificationCount > 0) {
                         Text(
-                            text = "System App",
+                            text = "${appInfo.notificationCount} notification${if (appInfo.notificationCount > 1) "s" else ""}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 10.sp

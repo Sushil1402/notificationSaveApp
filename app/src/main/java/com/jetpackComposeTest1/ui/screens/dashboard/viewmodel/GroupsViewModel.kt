@@ -1,26 +1,33 @@
 package com.jetpackComposeTest1.ui.screens.dashboard.viewmodel
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetpackComposeTest1.db.NotificationDao
+import com.jetpackComposeTest1.data.repository.database.NotificationGroupRepository
+import com.jetpackComposeTest1.data.local.database.NotificationGroupEntity
 import com.jetpackComposeTest1.model.notification.NotificationGroupData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class GroupsViewModel @Inject constructor(
-    private val notificationDao: NotificationDao
+    private val notificationDao: NotificationDao,
+    private val groupRepository: NotificationGroupRepository
 ) : ViewModel() {
 
     private val _notificationGroups = MutableStateFlow<List<NotificationGroupData>>(emptyList())
     val notificationGroups: StateFlow<List<NotificationGroupData>> = _notificationGroups.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         loadNotificationGroups()
@@ -28,88 +35,137 @@ class GroupsViewModel @Inject constructor(
 
     private fun loadNotificationGroups() {
         viewModelScope.launch {
-            // Create default groups
-            val groups = listOf(
-                NotificationGroupData(
-                    id = "unread",
-                    name = "Unread Notifications",
-                    description = "Notifications you haven't read yet",
-                    icon = Icons.Default.Settings,
-                    color = Color(0xFFFF6B6B),
-                    type = "Unread",
-                    isMuted = false,
-                    totalNotifications = 23,
-                    unreadNotifications = 23,
-                    todayNotifications = 5,
-                    appCount = 8
-                ),
-                NotificationGroupData(
-                    id = "read",
-                    name = "Read Notifications",
-                    description = "Notifications you've already read",
-                    icon = Icons.Default.Settings,
-                    color = Color(0xFF4CAF50),
-                    type = "Read",
-                    isMuted = false,
-                    totalNotifications = 156,
-                    unreadNotifications = 0,
-                    todayNotifications = 12,
-                    appCount = 15
-                ),
-                NotificationGroupData(
-                    id = "muted",
-                    name = "Muted Notifications",
-                    description = "Notifications from muted apps",
-                    icon = Icons.Default.Settings,
-                    color = Color(0xFF9E9E9E),
-                    type = "Muted",
-                    isMuted = true,
-                    totalNotifications = 45,
-                    unreadNotifications = 0,
-                    todayNotifications = 3,
-                    appCount = 5
-                ),
-                NotificationGroupData(
-                    id = "custom1",
-                    name = "Work Notifications",
-                    description = "Notifications from work-related apps",
-                    icon = Icons.Default.Settings,
-                    color = Color(0xFF2196F3),
-                    type = "Custom",
-                    isMuted = false,
-                    totalNotifications = 78,
-                    unreadNotifications = 12,
-                    todayNotifications = 8,
-                    appCount = 6
-                ),
-                NotificationGroupData(
-                    id = "custom2",
-                    name = "Social Media",
-                    description = "Notifications from social media apps",
-                    icon = Icons.Default.Settings,
-                    color = Color(0xFFE91E63),
-                    type = "Custom",
-                    isMuted = false,
-                    totalNotifications = 92,
-                    unreadNotifications = 8,
-                    todayNotifications = 15,
-                    appCount = 4
-                )
-            )
+            _isLoading.value = true
             
-            _notificationGroups.value = groups
+            // Combine system groups (from notifications) with custom groups (from database)
+            combine(
+                notificationDao.getNotificationsByReadStatus(isRead = false), // Unread notifications
+                notificationDao.getNotificationsByReadStatus(isRead = true),  // Read notifications
+                notificationDao.getNotificationsByMuteStatus(isMuted = true), // Muted notifications
+                groupRepository.getAllGroups() // Custom groups from database
+            ) { unreadNotifications, readNotifications, mutedNotifications, customGroups ->
+                
+                val now = System.currentTimeMillis()
+                val today = now - (24 * 60 * 60 * 1000) // 24 hours ago
+                
+                // Calculate statistics for system groups
+                val unreadStats = calculateNotificationStats(unreadNotifications, today)
+                val readStats = calculateNotificationStats(readNotifications, today)
+                val mutedStats = calculateNotificationStats(mutedNotifications, today)
+                
+                // Create system groups
+                val systemGroups = listOf(
+                    NotificationGroupData(
+                        id = "unread",
+                        name = "Unread Notifications",
+                        description = "Notifications you haven't read yet",
+                        icon = Icons.Default.Email,
+                        color = Color(0xFFFF6B6B),
+                        type = "Unread",
+                        isMuted = false,
+                        totalNotifications = unreadStats.totalCount,
+                        unreadNotifications = unreadStats.totalCount,
+                        todayNotifications = unreadStats.todayCount,
+                        appCount = unreadStats.appCount
+                    ),
+                    NotificationGroupData(
+                        id = "read",
+                        name = "Read Notifications",
+                        description = "Notifications you've already read",
+                        icon = Icons.Default.Done,
+                        color = Color(0xFF4CAF50),
+                        type = "Read",
+                        isMuted = false,
+                        totalNotifications = readStats.totalCount,
+                        unreadNotifications = 0,
+                        todayNotifications = readStats.todayCount,
+                        appCount = readStats.appCount
+                    ),
+                    NotificationGroupData(
+                        id = "muted",
+                        name = "Muted Notifications",
+                        description = "Notifications from muted apps",
+                        icon = Icons.Default.Face,
+                        color = Color(0xFF9E9E9E),
+                        type = "Muted",
+                        isMuted = true,
+                        totalNotifications = mutedStats.totalCount,
+                        unreadNotifications = 0,
+                        todayNotifications = mutedStats.todayCount,
+                        appCount = mutedStats.appCount
+                    )
+                )
+                
+                // Convert custom groups from database entities to UI models
+                val customGroupsUI = customGroups.map { entity ->
+                    NotificationGroupData(
+                        id = entity.id,
+                        name = entity.name,
+                        description = entity.description ?: "Custom group with ${entity.appCount} apps",
+                        icon = getIconFromName(entity.iconName),
+                        color = Color(android.graphics.Color.parseColor(entity.colorHex)),
+                        type = entity.groupType,
+                        isMuted = entity.isMuted,
+                        totalNotifications = entity.totalNotifications,
+                        unreadNotifications = entity.unreadNotifications,
+                        todayNotifications = entity.todayNotifications,
+                        appCount = entity.appCount
+                    )
+                }
+                
+                // Combine system and custom groups
+                _notificationGroups.value = systemGroups + customGroupsUI
+                _isLoading.value = false
+            }.collect { /* This will trigger whenever any of the flows emit */ }
         }
+    }
+    
+    private data class NotificationStats(
+        val totalCount: Int,
+        val todayCount: Int,
+        val appCount: Int
+    )
+    
+    private fun calculateNotificationStats(notifications: List<com.jetpackComposeTest1.db.NotificationEntity>, todayTimestamp: Long): NotificationStats {
+        val totalCount = notifications.size
+        val todayCount = notifications.count { it.timestamp >= todayTimestamp }
+        val appCount = notifications.map { it.packageName }.distinct().size
+        
+        return NotificationStats(
+            totalCount = totalCount,
+            todayCount = todayCount,
+            appCount = appCount
+        )
+    }
+    
+    private fun getIconFromName(iconName: String) = when (iconName) {
+        "email" -> Icons.Default.Email
+        "done" -> Icons.Default.Done
+        "face" -> Icons.Default.Face
+        "group" -> Icons.Default.DateRange
+        "work" -> Icons.Default.Build
+        "home" -> Icons.Default.Home
+        "settings" -> Icons.Default.Settings
+        else -> Icons.Default.Face
     }
 
     fun toggleGroupMute(groupId: String) {
         viewModelScope.launch {
-            val groups = _notificationGroups.value.toMutableList()
-            val groupIndex = groups.indexOfFirst { it.id == groupId }
-            if (groupIndex != -1) {
-                groups[groupIndex] = groups[groupIndex].copy(isMuted = !groups[groupIndex].isMuted)
-                _notificationGroups.value = groups
+            if (groupId in listOf("unread", "read", "muted")) {
+                // Handle system groups - just update UI state for now
+                val groups = _notificationGroups.value.toMutableList()
+                val groupIndex = groups.indexOfFirst { it.id == groupId }
+                if (groupIndex != -1) {
+                    groups[groupIndex] = groups[groupIndex].copy(isMuted = !groups[groupIndex].isMuted)
+                    _notificationGroups.value = groups
+                }
+            } else {
+                // Handle custom groups - update database
+                groupRepository.toggleGroupMute(groupId)
             }
         }
     }
+    
+
 }
 

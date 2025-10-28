@@ -117,7 +117,7 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable(MainNavScreen.Home.route) { HomeScreenView(navToScreen) }
-                composable(MainNavScreen.Groups.route) { GroupsScreenView() }
+                composable(MainNavScreen.Groups.route) { GroupsScreenView(navToScreen) }
                 composable(MainNavScreen.Analytics.route) { AnalyticsScreenView() }
                 composable(MainNavScreen.Settings.route) { SettingsScreenView() }
             }

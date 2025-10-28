@@ -52,6 +52,7 @@ import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.theme.unreadIndicatorColor
 import com.jetpackComposeTest1.ui.utils.NotificationUtils
 import com.jetpackComposeTest1.ui.utils.PermissionManager
+import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreenView(
@@ -154,7 +155,7 @@ fun HomeScreenView(
             // Navigate to AppSelectionScreen when permissions are granted
             LaunchedEffect(permissionState.allGranted) {
                 if (permissionState.allGranted && !homeScreenVM.isAppSelectionCompleted()) {
-                    kotlinx.coroutines.delay(500) // Small delay for better UX
+                   delay(500) // Small delay for better UX
                     navToScreen.invoke(AppSelectionScreenRoute)
                 }
             }
@@ -170,7 +171,6 @@ fun HomeScreenView(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-
                 ) {
                     if (groupedNotifications.isEmpty()) {
                         // Empty state
@@ -560,4 +560,5 @@ fun EmptyStateMessage(context: Context) {
         )
     }
 }
+
 
