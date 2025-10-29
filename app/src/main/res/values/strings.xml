@@ -49,11 +49,6 @@
     <string name="notification_group">Notification Groups</string>
     <string name="delete_group">Delete Group</string>
     <string name="are_you_sure_delete_group">Are you sure you want to delete "%s"? This action cannot be undone.</string>
-    <string-array name="group_ids">
-        <item>unread</item>
-        <item>muted</item>
-    </string-array>
-
     <string name="group_label_muted">Muted</string>
     <string name="group_label_unread">Unread</string>
 
