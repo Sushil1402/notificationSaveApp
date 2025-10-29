@@ -13,6 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 
 /* Main App Color */
 val main_appColor = Color(0xFF00a77a)
+val white_Color = Color(0xFFFFFFFF)
 
 /* Unread Indicator Color */
 val unreadIndicatorColor = Color(0xFFFF9800)
