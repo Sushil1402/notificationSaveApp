@@ -69,19 +69,6 @@ class GroupsViewModel @Inject constructor(
                         appCount = unreadStats.appCount
                     ),
                     NotificationGroupData(
-                        id = "read",
-                        name = "Read Notifications",
-                        description = "Notifications you've already read",
-                        icon = Icons.Default.Done,
-                        color = Color(0xFF4CAF50),
-                        type = "Read",
-                        isMuted = false,
-                        totalNotifications = readStats.totalCount,
-                        unreadNotifications = 0,
-                        todayNotifications = readStats.todayCount,
-                        appCount = readStats.appCount
-                    ),
-                    NotificationGroupData(
                         id = "muted",
                         name = "Muted Notifications",
                         description = "Notifications from muted apps",
@@ -151,7 +138,7 @@ class GroupsViewModel @Inject constructor(
 
     fun toggleGroupMute(groupId: String) {
         viewModelScope.launch {
-            if (groupId in listOf("unread", "read", "muted")) {
+            if (groupId in listOf("unread", "muted")) {
                 // Handle system groups - just update UI state for now
                 val groups = _notificationGroups.value.toMutableList()
                 val groupIndex = groups.indexOfFirst { it.id == groupId }
@@ -169,7 +156,7 @@ class GroupsViewModel @Inject constructor(
 
     fun deleteGroup(groupId: String) {
         viewModelScope.launch {
-            if (groupId !in listOf("unread", "read", "muted")) {
+            if (groupId !in listOf("unread", "muted")) {
                 // Only allow deletion of custom groups
                 groupRepository.deleteGroup(groupId)
             }
@@ -178,7 +165,7 @@ class GroupsViewModel @Inject constructor(
 
     fun renameGroup(groupId: String, newName: String) {
         viewModelScope.launch {
-            if (groupId !in listOf("unread", "read", "muted")) {
+            if (groupId !in listOf("unread", "muted")) {
                 // Only allow renaming of custom groups
                 groupRepository.updateGroupName(groupId, newName)
             }

@@ -1,5 +1,6 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,9 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.model.notification.NotificationGroupData
 import com.jetpackComposeTest1.ui.components.GroupNameDialog
 import com.jetpackComposeTest1.ui.components.AppAlertDialog
@@ -34,6 +37,7 @@ fun GroupsScreenView(
     navToScreen: (AppNavigationRoute) -> Unit,
     viewModel: GroupsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val groups by viewModel.notificationGroups.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -66,7 +70,7 @@ fun GroupsScreenView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Notification Groups",
+                    text = context.getString(R.string.notification_group),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -95,6 +99,7 @@ fun GroupsScreenView(
                 ) {
                     itemsIndexed(groups) { index, group ->
                         NotificationGroupItem(
+                            context=context,
                             group = group,
                             onGroupClick = { 
                                 // Navigate to group apps screen
@@ -179,10 +184,10 @@ fun GroupsScreenView(
                     deleteGroupName = ""
                     selectedGroupId = ""
                 },
-                title = "Delete Group",
-                text = "Are you sure you want to delete \"$deleteGroupName\"? This action cannot be undone.",
-                confirmButtonText = "Delete",
-                dismissButtonText = "Cancel",
+                title = context.getString(R.string.delete_group),
+                text = context.getString(R.string.are_you_sure_delete_group, deleteGroupName),
+                confirmButtonText = context.getString(R.string.delete),
+                dismissButtonText = context.getString(R.string.cancel),
                 confirmButton = {
                     viewModel.deleteGroup(selectedGroupId)
                     showDeleteDialog = false
@@ -201,6 +206,7 @@ fun GroupsScreenView(
 
 @Composable
 fun NotificationGroupItem(
+    context: Context,
     modifier: Modifier,
     group: NotificationGroupData,
     onGroupClick: () -> Unit,
@@ -208,6 +214,8 @@ fun NotificationGroupItem(
     onRenameGroup: () -> Unit,
     onDeleteGroup: () -> Unit
 ) {
+    val groupIds = arrayListOf(context.getString(R.string.group_label_unread),context.getString(R.string.group_label_muted))
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -228,7 +236,7 @@ fun NotificationGroupItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Show icon for system groups, initials for custom groups
-                    if (group.id in listOf("unread", "read", "muted")) {
+                    if (group.id in groupIds) {
                         Icon(
                             imageVector = group.icon,
                             contentDescription = group.name,
@@ -273,7 +281,7 @@ fun NotificationGroupItem(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Show count badge for system groups
-                    if (group.id in listOf("unread", "read", "muted")) {
+                    if (group.id in groupIds) {
                         SmallCountBadge(
                             count = group.totalNotifications,
                             color = group.color
@@ -281,18 +289,18 @@ fun NotificationGroupItem(
                     }
                     
                     // Show mute/unmute toggle for custom groups only
-                    if (group.id !in listOf("unread", "read", "muted")) {
+                    if (group.id !in groupIds) {
                         IconButton(onClick = onToggleMute) {
                             Icon(
                                 imageVector = if (group.isMuted) Icons.Default.Notifications else Icons.Default.Notifications,
-                                contentDescription = if (group.isMuted) "Unmute" else "Mute",
+                                contentDescription = if (group.isMuted) context.getString(R.string.unmute) else context.getString(R.string.muted),
                                 tint = if (group.isMuted) Color.Red else Color.Gray
                             )
                         }
                     }
                     
                     // Show three-dot menu for custom groups only
-                    if (group.id !in listOf("unread", "read", "muted")) {
+                    if (group.id !in groupIds) {
                         var showDropdownMenu by remember { mutableStateOf(false) }
                         
                         Box {
@@ -309,7 +317,7 @@ fun NotificationGroupItem(
                                 onDismissRequest = { showDropdownMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Rename") },
+                                    text = { Text(context.getString(R.string.rename)) },
                                     onClick = {
                                         showDropdownMenu = false
                                         onRenameGroup()
@@ -322,7 +330,7 @@ fun NotificationGroupItem(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete") },
+                                    text = { Text(context.getString(R.string.delete)) },
                                     onClick = {
                                         showDropdownMenu = false
                                         onDeleteGroup()
@@ -343,15 +351,15 @@ fun NotificationGroupItem(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Group Stats - only for custom groups
-            if (group.id !in listOf("unread", "read", "muted")) {
+            if (group.id !in groupIds) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    GroupStatItem("Total", group.totalNotifications.toString())
-                    GroupStatItem("Unread", group.unreadNotifications.toString())
-                    GroupStatItem("Today", group.todayNotifications.toString())
-                    GroupStatItem("Apps", group.appCount.toString())
+                    GroupStatItem(context.getString(R.string.total), group.totalNotifications.toString())
+                    GroupStatItem(context.getString(R.string.unread), group.unreadNotifications.toString())
+                    GroupStatItem(context.getString(R.string.today), group.todayNotifications.toString())
+                    GroupStatItem(context.getString(R.string.apps), group.appCount.toString())
                 }
             }
 
@@ -360,10 +368,10 @@ fun NotificationGroupItem(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (group.id == "muted") {
-                    GroupTypeChip("Muted", Color.Red)
-                } else if (group.id !in listOf("unread", "read", "muted") && group.isMuted) {
-                    GroupTypeChip("Muted", Color.Red)
+                if (group.id == context.getString(R.string.group_label_muted)) {
+                    GroupTypeChip(context.getString(R.string.group_label_muted), Color.Red)
+                } else if (group.id !in groupIds && group.isMuted) {
+                    GroupTypeChip(context.getString(R.string.group_label_muted), Color.Red)
                 }
             }
         }
