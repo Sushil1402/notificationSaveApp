@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.jetpackComposeTest1.ui.navigation.AllUnreadNotificationsRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.DashboardScreenRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
@@ -22,6 +23,7 @@ import com.jetpackComposeTest1.ui.navigation.LoginScreenRoute
 import com.jetpackComposeTest1.ui.screens.LoginScreenView
 import com.jetpackComposeTest1.ui.screens.appselection.AppSelectionScreen
 import com.jetpackComposeTest1.ui.screens.appselection.DatabaseAppSelectionScreen
+import com.jetpackComposeTest1.ui.screens.dashboard.AllUnreadNotificationsScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailScreen
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -69,6 +71,7 @@ class MainActivity : ComponentActivity() {
                                 packageName = args.packageName,
                                 appName = args.appName,
                                 isFromNotification = args.isFromNotification,
+                                selectedDate= args.selectedDate,
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }
@@ -100,6 +103,11 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 }
                             )
+                        }
+                        composable<AllUnreadNotificationsRoute> {
+                            AllUnreadNotificationsScreen( onNavigateBack = {
+                                navController.popBackStack()
+                            })
                         }
 
                     }

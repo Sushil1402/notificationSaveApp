@@ -16,6 +16,7 @@ import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.data.repository.preferences.SharedPreferencesRepoImpl
 import com.jetpackComposeTest1.data.repository.preferences.SharedPreferencesRepository
 import com.jetpackComposeTest1.ui.utils.Constants
+import com.jetpackComposeTest1.utils.CleanupManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -87,6 +88,12 @@ class AppDIModule {
     @Singleton
     fun provideAppPreferencesRepo(appPreferences: AppPreferences):SharedPreferencesRepository{
         return SharedPreferencesRepoImpl(appPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCleanupManager(@ApplicationContext context: Context): CleanupManager {
+        return CleanupManager(context)
     }
 
 }

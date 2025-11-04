@@ -35,6 +35,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.jetpackComposeTest1.model.analytics.AppUsageData
 import com.jetpackComposeTest1.ui.components.charts.HourlyBarChart
 import com.jetpackComposeTest1.ui.components.charts.WeeklyBarChart
+import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
+import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.AnalyticsViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.NotificationUtils
@@ -43,7 +45,8 @@ import java.util.*
 
 @Composable
 fun AnalyticsScreenView(
-    viewModel: AnalyticsViewModel = hiltViewModel()
+    viewModel: AnalyticsViewModel = hiltViewModel(),
+    navToScreen: (AppNavigationRoute) -> Unit = {}
 ) {
     val context = LocalContext.current
     val selectedDate by viewModel.selectedDate.collectAsState()
@@ -214,7 +217,17 @@ fun AnalyticsScreenView(
                                         AppBreakdownRow(
                                             context = context,
                                             app = app,
-                                            maxCount = analytics.appBreakdown.first().count
+                                            maxCount = analytics.appBreakdown.first().count,
+                                            onClick = {
+                                                navToScreen(
+                                                    NotificationDetailRoute(
+                                                        packageName = app.packageName,
+                                                        appName = app.name,
+                                                        isFromNotification = false,
+                                                        selectedDate = selectedDate
+                                                    )
+                                                )
+                                            }
                                         )
                                         if (index < analytics.appBreakdown.size - 1) {
                                             Spacer(modifier = Modifier.height(12.dp))
@@ -545,6 +558,111 @@ fun AppBreakdownRow(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
+    }
+}
+
+@Composable
+fun AppBreakdownRow(
+    context: android.content.Context,
+    app: AppUsageData,
+    maxCount: Int,
+    onClick: () -> Unit
+) {
+    val appIcon = remember(app.packageName) {
+        try {
+            val bitmap = NotificationUtils.getAppIconBitmap(context, app.packageName)
+            bitmap?.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    val progress = if (maxCount > 0) app.count.toFloat() / maxCount else 0f
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // App Icon
+            if (appIcon != null) {
+                Image(
+                    bitmap = appIcon,
+                    contentDescription = app.name,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Box(
+                modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            color = app.color.copy(alpha = 0.3f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = app.name.take(1).uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = app.color
+                    )
+                }
+            }
+            
+            Column(modifier = Modifier.weight(1f)) {
+            Text(
+                    text = app.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.Gray.copy(alpha = 0.3f), shape = RoundedCornerShape(1.dp))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(4.dp))
+                            .fillMaxWidth(progress)
+                            .background(Color(0xFFEA4335), shape = RoundedCornerShape(1.dp))
+                    )
+                }
+            }
+        }
+        
+        // Notification count on the right
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = app.count.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "View details",
+                tint = Color.Gray
+            )
+        }
     }
 }
 

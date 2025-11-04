@@ -196,7 +196,8 @@ fun HomeScreenView(
                                             NotificationDetailRoute(
                                                 packageName = group.packageName,
                                                 appName = group.appName,
-                                                isFromNotification = true
+                                                isFromNotification = true,
+
                                             )
                                         )
                                     },
@@ -285,7 +286,7 @@ fun NotificationHeader(
             )
         }
         Box {
-            IconButton(onClick = { navToScreen(AllUnreadNotificationsRoute) }) {
+            IconButton(onClick = { navToScreen.invoke(AllUnreadNotificationsRoute) }) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "show all unread notification",

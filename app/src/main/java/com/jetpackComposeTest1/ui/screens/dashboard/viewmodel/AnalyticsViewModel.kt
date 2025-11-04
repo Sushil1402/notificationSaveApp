@@ -13,6 +13,7 @@ import com.jetpackComposeTest1.model.analytics.HourData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -171,7 +172,7 @@ class AnalyticsViewModel @Inject constructor(
         
         val startOfDay = getStartOfDay(selectedDateTimestamp)
         val endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1
-        
+
         // Get notifications for selected day
         val dayNotifications = allNotifications.filter {
             it.timestamp >= startOfDay && it.timestamp <= endOfDay

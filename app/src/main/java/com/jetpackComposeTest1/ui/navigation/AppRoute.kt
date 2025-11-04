@@ -50,7 +50,8 @@ data class GroupAppSelectionRoute(
 data class NotificationDetailRoute(
     val packageName: String,
     val appName: String,
-    val isFromNotification:Boolean = false
+    val isFromNotification:Boolean = false,
+    val selectedDate: Long? = null
 ): AppNavigationRoute
 
 @Serializable

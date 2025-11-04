@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -24,6 +28,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -47,11 +52,14 @@ fun NotificationDetailScreen(
     packageName: String,
     appName: String,
     isFromNotification:Boolean,
+    selectedDate:Long?,
     onNavigateBack: () -> Unit,
     viewModel: NotificationDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val notifications by viewModel.notifications.collectAsState()
+    val grouped by viewModel.groupedNotifications.collectAsState()
+    val dateFilter by viewModel.selectedDateFilter.collectAsState()
     val appIcon by viewModel.appIcon.collectAsState()
     val unreadCount by viewModel.unreadCount.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -61,10 +69,19 @@ fun NotificationDetailScreen(
     var showMarkAllDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedNotification by remember { mutableStateOf<NotificationItem?>(null) }
+    var showFilterSheet by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     // Load notifications when screen is first displayed
     LaunchedEffect(packageName, appName) {
         viewModel.loadNotificationsForApp(context, packageName, appName)
+    }
+
+    // Apply incoming selectedDate as initial filter if provided
+    LaunchedEffect(selectedDate) {
+        if (selectedDate != null && selectedDate > 0L) {
+            viewModel.setDateFilter(selectedDate)
+        }
     }
 
     Scaffold(
@@ -128,6 +145,13 @@ fun NotificationDetailScreen(
                             tint = Color.White
                         )
                     }
+                    IconButton(onClick = { showFilterSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Build,
+                            contentDescription = "Filter",
+                            tint = Color.White
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = main_appColor
@@ -141,6 +165,8 @@ fun NotificationDetailScreen(
                 .padding(paddingValues)
                 .background(Color.White)
         ) {
+            // state moved to top scope so TopAppBar can modify it
+
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -196,22 +222,14 @@ fun NotificationDetailScreen(
                             EmptyNotificationsMessage()
                         }
                     } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(notifications) { notification ->
-                                NotificationDetailItem(
-                                    notification = notification,
-                                    onMarkAsRead = { viewModel.markAsRead(notification.id) },
-                                    onDelete = {
-                                        selectedNotification = notification
-                                        showDeleteDialog = true
-                                    }
-                                )
+                        NotificationsGroupedList(
+                            groups = grouped,
+                            onMarkAsRead = { viewModel.markAsRead(it) },
+                            onDelete = { notif ->
+                                selectedNotification = notif
+                                showDeleteDialog = true
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -231,6 +249,34 @@ fun NotificationDetailScreen(
                         tint = Color.White
                     )
                 }
+            }
+
+            // Filter Bottom Sheet
+            if (showFilterSheet) {
+                FilterBottomSheet(
+                    currentDateFilter = dateFilter,
+                    onPickDate = {
+                        showDatePicker = true
+                    },
+                    onClearDate = {
+                        viewModel.setDateFilter(null)
+                        showFilterSheet = false
+                    },
+                    onDismiss = { showFilterSheet = false }
+                )
+            }
+
+            // Date Picker Dialog
+            if (showDatePicker) {
+                DatePickerDialogComposable(
+                    selectedDate = dateFilter ?: System.currentTimeMillis(),
+                    onDateSelected = { millis ->
+                        viewModel.setDateFilter(millis)
+                        showDatePicker = false
+                        showFilterSheet = false
+                    },
+                    onDismiss = { showDatePicker = false }
+                )
             }
         }
     }
@@ -275,6 +321,184 @@ fun NotificationDetailScreen(
                 showDeleteDialog = false
                 selectedNotification = null
             })
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NotificationsGroupedList(
+    groups: List<NotificationDetailViewModel.DateGroup>,
+    onMarkAsRead: (String) -> Unit,
+    onDelete: (NotificationItem) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        groups.forEach { group ->
+            stickyHeader {
+                // Centered rounded date chip
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Transparent)
+                        .padding(top = 8.dp)
+                ) {
+                    Surface(
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+                        color = Color.White,
+                        tonalElevation = 2.dp,
+                        shadowElevation = 2.dp,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                    ) {
+                        Text(
+                            text = group.dateLabel,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+            items(group.items, key = { it.id }) { notification ->
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    NotificationDetailItem(
+                        notification = notification,
+                        onMarkAsRead = { onMarkAsRead(notification.id) },
+                        onDelete = { onDelete(notification) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterBottomSheet(
+    currentDateFilter: Long?,
+    onPickDate: () -> Unit,
+    onClearDate: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val dateText = remember(currentDateFilter) {
+        currentDateFilter?.let {
+            java.text.SimpleDateFormat("EEEE, d MMMM", java.util.Locale.getDefault())
+                .format(java.util.Date(it))
+        } ?: "All dates"
+    }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        dragHandle = {}
+    ) {
+        // Sheet background
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF3F7FC))
+        ) {
+            // Small top handle line
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .background(Color(0x33000000), shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
+                )
+            }
+            // Header row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Filters",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.Black,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            // Content
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)) {
+                // Date label
+                Text(
+                    text = "Date",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Date select-like field
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE0E3E7))
+                        .clickable { onPickDate() }
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (currentDateFilter == null) "Select value" else dateText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (currentDateFilter == null) Color(0xFF9EA3AE) else Color.Black,
+                                maxLines = 1
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = Color(0xFF9EA3AE)
+                        )
+                    }
+                }
+
+                // Clear control
+                if (currentDateFilter != null) {
+                    Button(
+                        onClick = onClearDate,
+                        modifier = Modifier
+                            .padding(top = 12.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = main_appColor,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = "Clear date")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }
 

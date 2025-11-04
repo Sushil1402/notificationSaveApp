@@ -7,6 +7,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetpackComposeTest1.data.local.database.AllAppEntity
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -129,11 +131,21 @@ class AppSelectionViewModel @Inject constructor(
     }
 
     private suspend fun saveAppsToDatabase(appInfoList: List<AppInfo>) {
+        // Get existing apps from database to preserve their enabled status and other user data
+        // Use first() to get the current list of apps from the Flow
+        val existingApps: Map<String, AllAppEntity> = withContext(Dispatchers.IO) {
+            allAppRepository.getAllApps().first().associateBy { it.packageName }
+        }
+        
         val appEntities = appInfoList.map { appInfo ->
+            // Get existing app data if it exists
+            val existingEntity = existingApps[appInfo.packageName]
+            
             AllAppEntity(
                 packageName = appInfo.packageName,
                 appName = appInfo.appName,
-                isEnabled = false,
+                // Preserve isEnabled status if app already exists, otherwise default to false
+                isEnabled = existingEntity?.isEnabled ?: false,
                 isSystemApp = appInfo.isSystemApp,
                 isUserApp = !appInfo.isSystemApp,
                 versionName = appInfo.versionName,
@@ -141,23 +153,29 @@ class AppSelectionViewModel @Inject constructor(
                 targetSdkVersion = appInfo.targetSdkVersion,
                 minSdkVersion = appInfo.minSdkVersion,
                 category = getAppCategory(appInfo.packageName),
-                groupType = getAppGroupType(appInfo.packageName),
+                groupType = existingEntity?.groupType ?: getAppGroupType(appInfo.packageName),
                 firstInstalledAt = appInfo.firstInstalledAt,
                 lastUpdatedAt = appInfo.lastUpdatedAt,
-                addedToDatabaseAt = System.currentTimeMillis(),
-                canSendNotifications = true,
-                userNotes = null,
-                userTags = null,
-                lastNotificationAt = null,
-                iconResourceId = null,
-                iconPath = null,
-                appColor = null,
+                // Preserve original addedToDatabaseAt timestamp for existing apps
+                addedToDatabaseAt = existingEntity?.addedToDatabaseAt ?: System.currentTimeMillis(),
+                canSendNotifications = existingEntity?.canSendNotifications ?: true,
+                // Preserve user notes and tags if they exist
+                userNotes = existingEntity?.userNotes,
+                userTags = existingEntity?.userTags,
+                priority = existingEntity?.priority ?: 0,
+                // Preserve notification count and analytics data
+                notificationCount = existingEntity?.notificationCount ?: 0,
+                lastNotificationAt = existingEntity?.lastNotificationAt,
+                isFrequentlyUsed = existingEntity?.isFrequentlyUsed ?: false,
+                iconResourceId = existingEntity?.iconResourceId,
+                iconPath = existingEntity?.iconPath,
+                appColor = existingEntity?.appColor,
                 installSource = appInfo.installSource,
                 appSize = appInfo.appSize,
-                dataUsage = null,
-                isSynced = false,
-                syncTime = null,
-                backupId = null
+                dataUsage = existingEntity?.dataUsage,
+                isSynced = existingEntity?.isSynced ?: false,
+                syncTime = existingEntity?.syncTime,
+                backupId = existingEntity?.backupId
             )
         }
         

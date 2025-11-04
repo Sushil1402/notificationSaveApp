@@ -118,8 +118,8 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
             ) {
                 composable(MainNavScreen.Home.route) { HomeScreenView(navToScreen) }
                 composable(MainNavScreen.Groups.route) { GroupsScreenView(navToScreen) }
-                composable(MainNavScreen.Analytics.route) { AnalyticsScreenView() }
-                composable(MainNavScreen.Settings.route) { SettingsScreenView() }
+                composable(MainNavScreen.Analytics.route) { AnalyticsScreenView(navToScreen = navToScreen) }
+                composable(MainNavScreen.Settings.route) { SettingsScreenView(navToScreen) }
             }
         }
     }

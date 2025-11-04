@@ -18,6 +18,9 @@ class AppPreferences @Inject constructor(
     companion object {
         private const val KEY_APP_SELECTION_COMPLETED = "app_selection_completed"
         private const val KEY_FIRST_LAUNCH = "first_launch"
+        private const val KEY_AUTO_CLEANUP_ENABLED = "auto_cleanup_enabled"
+        private const val KEY_RETENTION_DAYS = "retention_days"
+        private const val KEY_LAST_CLEANUP_TIMESTAMP = "last_cleanup_timestamp"
     }
 
     fun isAppSelectionCompleted(): Boolean {
@@ -34,5 +37,31 @@ class AppPreferences @Inject constructor(
 
     fun setFirstLaunchCompleted() {
         prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
+    }
+
+    // Auto Cleanup Settings
+    fun isAutoCleanupEnabled(): Boolean {
+        return prefs.getBoolean(KEY_AUTO_CLEANUP_ENABLED, false)
+    }
+
+    fun setAutoCleanupEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUTO_CLEANUP_ENABLED, enabled).apply()
+    }
+
+    fun getRetentionDays(): Int {
+        return prefs.getInt(KEY_RETENTION_DAYS, 30)
+    }
+
+    fun setRetentionDays(days: Int) {
+        prefs.edit().putInt(KEY_RETENTION_DAYS, days).apply()
+    }
+
+    // Last Cleanup Timestamp (for tracking when cleanup last ran)
+    fun getLastCleanupTimestamp(): Long {
+        return prefs.getLong(KEY_LAST_CLEANUP_TIMESTAMP, 0L)
+    }
+
+    fun setLastCleanupTimestamp(timestamp: Long) {
+        prefs.edit().putLong(KEY_LAST_CLEANUP_TIMESTAMP, timestamp).apply()
     }
 }

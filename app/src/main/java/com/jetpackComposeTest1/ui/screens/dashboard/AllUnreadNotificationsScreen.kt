@@ -43,7 +43,7 @@ import com.jetpackComposeTest1.ui.utils.toImageBitmap
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllUnreadNotificationsScreen(
-    navController: NavController,
+    onNavigateBack:()->Unit,
     viewModel: AllUnreadNotificationsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -72,7 +72,7 @@ fun AllUnreadNotificationsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { onNavigateBack.invoke() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = context.getString(R.string.back),

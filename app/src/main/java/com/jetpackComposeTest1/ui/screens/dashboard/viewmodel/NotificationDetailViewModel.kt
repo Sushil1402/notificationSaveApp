@@ -47,18 +47,63 @@ class NotificationDetailViewModel @Inject constructor(
     // Original notifications for filtering
     private val _allNotifications = MutableStateFlow<List<NotificationItem>>(emptyList())
 
+    // Keep timestamp to support date filtering/grouping without changing NotificationItem
+    private val _allWithTime = MutableStateFlow<List<Pair<Long, NotificationItem>>>(emptyList())
+
+    // Date filter (startOfDay millis); when null -> show all dates
+    private val _selectedDateFilter = MutableStateFlow<Long?>(null)
+    val selectedDateFilter: StateFlow<Long?> = _selectedDateFilter.asStateFlow()
+
+    // Grouped notifications for sticky date headers
+    data class DateGroup(
+        val dateStartMillis: Long,
+        val dateLabel: String,
+        val items: List<NotificationItem>
+    )
+
+    private val _groupedNotifications = MutableStateFlow<List<DateGroup>>(emptyList())
+    val groupedNotifications: StateFlow<List<DateGroup>> = _groupedNotifications.asStateFlow()
+
     init {
-        // Combine search query with all notifications to filter
+        // Combine search query, raw list, and date filter to produce filtered list and groups
         viewModelScope.launch {
-            combine(_searchQuery, _allNotifications) { query, notifications ->
-                if (query.isBlank()) {
-                    notifications
+            combine(_searchQuery, _allWithTime, _selectedDateFilter) { query, allWithTime, dateFilter ->
+                // Apply date filter first
+                val filteredByDate = if (dateFilter == null) {
+                    allWithTime
                 } else {
-                    filterNotifications(notifications, query)
+                    val dayRange = dayStartEnd(dateFilter)
+                    allWithTime.filter { (ts, _) -> ts in dayRange.first..dayRange.second }
                 }
-            }.collect { filtered ->
-                _filteredNotifications.value = filtered
-                _notifications.value = filtered
+
+                // Map to items for search
+                val items = filteredByDate.map { it.second }
+                val afterSearch = if (query.isBlank()) items else filterNotifications(items, query)
+
+                // Update flat lists
+                _filteredNotifications.value = afterSearch
+                _notifications.value = afterSearch
+
+                // Build groups by day from filteredByDate but only retaining items in afterSearch
+                val allowedIds = afterSearch.map { it.id }.toSet()
+                val grouped = filteredByDate
+                    .filter { it.second.id in allowedIds }
+                    .groupBy { dayStart(it.first) }
+                    .toSortedMap(compareByDescending { it }) // newest day first
+                    .map { (dayStart, pairs) ->
+                        val itemsForDay = pairs
+                            .sortedByDescending { it.first }
+                            .map { it.second }
+                        DateGroup(
+                            dateStartMillis = dayStart,
+                            dateLabel = formatDateHeader(dayStart),
+                            items = itemsForDay
+                        )
+                    }
+
+                grouped
+            }.collect { groups ->
+                _groupedNotifications.value = groups
             }
         }
     }
@@ -73,19 +118,21 @@ class NotificationDetailViewModel @Inject constructor(
             
             // Load all notifications for this app (both read and unread)
             notificationDBRepo.getNotificationsByPackageName(packageName).collect { notificationEntities ->
-                val notificationItems = notificationEntities
-                    .sortedByDescending { it.timestamp }
-                    .map { entity ->
-                        NotificationItem(
-                            id = entity.id.toString(),
-                            title = entity.title,
-                            message = entity.text,
-                            isRead = entity.isRead,
-                            timeAgo = formatTimeAgo(entity.timestamp)
-                        )
-                    }
+                val sorted = notificationEntities.sortedByDescending { it.timestamp }
+                val withTime = sorted.map { entity ->
+                    val item = NotificationItem(
+                        id = entity.id.toString(),
+                        title = entity.title,
+                        message = entity.text,
+                        isRead = entity.isRead,
+                        timeAgo = formatTimeAgo(entity.timestamp)
+                    )
+                    entity.timestamp to item
+                }
+                val notificationItems = withTime.map { it.second }
                 
                 _allNotifications.value = notificationItems
+                _allWithTime.value = withTime
                 _unreadCount.value = notificationItems.count { !it.isRead }
                 _isLoading.value = false
             }
@@ -105,6 +152,9 @@ class NotificationDetailViewModel @Inject constructor(
                     } else {
                         notification
                     }
+                }
+                _allWithTime.value = _allWithTime.value.map { (ts, notification) ->
+                    if (notification.id == notificationId) ts to notification.copy(isRead = true) else ts to notification
                 }
                 
                 // Update unread count
@@ -131,6 +181,7 @@ class NotificationDetailViewModel @Inject constructor(
             _allNotifications.value = _allNotifications.value.map { notification ->
                 notification.copy(isRead = true)
             }
+            _allWithTime.value = _allWithTime.value.map { (ts, notification) -> ts to notification.copy(isRead = true) }
             
             _unreadCount.value = 0
         }
@@ -144,6 +195,7 @@ class NotificationDetailViewModel @Inject constructor(
                 
                 // Update local state
                 _allNotifications.value = _allNotifications.value.filter { it.id != notificationId }
+                _allWithTime.value = _allWithTime.value.filter { it.second.id != notificationId }
                 _unreadCount.value = _allNotifications.value.count { !it.isRead }
             } catch (e: Exception) {
                 // Handle error
@@ -189,5 +241,32 @@ class NotificationDetailViewModel @Inject constructor(
             notification.title.lowercase().contains(lowercaseQuery) ||
             notification.message.lowercase().contains(lowercaseQuery)
         }
+    }
+
+    // Utilities for date grouping/filtering
+    private fun dayStart(timeMillis: Long): Long {
+        val cal = java.util.Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        return cal.timeInMillis
+    }
+
+    private fun dayStartEnd(dayStartMillis: Long): Pair<Long, Long> {
+        val start = dayStart(dayStartMillis)
+        val end = start + 24L * 60L * 60L * 1000L - 1L
+        return start to end
+    }
+
+    private fun formatDateHeader(dayStartMillis: Long): String {
+        val sdf = java.text.SimpleDateFormat("EEEE, d MMMM", java.util.Locale.getDefault())
+        return sdf.format(java.util.Date(dayStartMillis))
+    }
+
+    fun setDateFilter(dateMillis: Long?) {
+        _selectedDateFilter.value = dateMillis?.let { dayStart(it) }
     }
 }
