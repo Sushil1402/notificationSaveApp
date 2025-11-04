@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -22,6 +24,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ListItem
@@ -46,6 +50,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,6 +99,11 @@ fun SettingsScreenView(
     val storagePercent = 65.2f
     var darkModeEnabled by remember { mutableStateOf(false) }
     var notificationSound by remember { mutableStateOf(true) }
+    
+    // Privacy settings
+    var passcodeEnabled by remember { mutableStateOf(false) }
+    var lockscreenWidgetEnabled by remember { mutableStateOf(true) }
+    var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
 
     var showRetentionBottomSheet by remember { mutableStateOf(false) }
     var showClearAllDialog by remember { mutableStateOf(false) }
@@ -243,6 +254,33 @@ fun SettingsScreenView(
                 }
 
                 item {
+                    SectionCard(modifier = Modifier, title = "Privacy") {
+                        SettingsSwitchItem(
+                            icon = Icons.Filled.Info,
+                            title = "Passcode",
+                            subtitle = "Use passcode to unlock Notisave.",
+                            checked = passcodeEnabled,
+                            onCheckedChange = { passcodeEnabled = it }
+                        )
+                        Divider()
+                        SettingsSwitchItem(
+                            icon = Icons.Filled.Info,
+                            title = "Lockscreen widget",
+                            subtitle = "Show the widget on lockscreen",
+                            checked = lockscreenWidgetEnabled,
+                            onCheckedChange = { lockscreenWidgetEnabled = it }
+                        )
+                        Divider()
+                        SettingsNavItem(
+                            icon = Icons.Filled.Info,
+                            title = "Privacy policy",
+                            subtitle = "How data is stored",
+                            onClick = { showPrivacyPolicyDialog = true }
+                        )
+                    }
+                }
+
+                item {
                     SectionCard(modifier = Modifier.padding(bottom = 200.dp),title = "App Preferences") {
                         SettingsSwitchItem(
                             icon = Icons.Filled.Info,
@@ -277,18 +315,11 @@ fun SettingsScreenView(
             }
 
             if (showClearAllDialog) {
-                AlertDialog(
-                    onDismissRequest = { showClearAllDialog = false },
-                    title = { Text("Clear all data?") },
-                    text = { Text("This will delete all saved notifications. This action cannot be undone.") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showClearAllDialog = false
-                            // perform clear all
-                        }) { Text("Delete") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showClearAllDialog = false }) { Text("Cancel") }
+                ClearAllDataConfirmationDialog(
+                    onDismiss = { showClearAllDialog = false },
+                    onConfirm = {
+                        viewModel.clearAllData()
+                        showClearAllDialog = false
                     }
                 )
             }
@@ -319,6 +350,48 @@ fun SettingsScreenView(
                     confirmButton = {
                         TextButton(onClick = { viewModel.resetExportState() }) {
                             Text("OK")
+                        }
+                    }
+                )
+            }
+
+            // Privacy Policy dialog
+            if (showPrivacyPolicyDialog) {
+                AlertDialog(
+                    onDismissRequest = { showPrivacyPolicyDialog = false },
+                    title = { 
+                        Text(
+                            "Privacy Policy",
+                            fontWeight = FontWeight.Bold
+                        ) 
+                    },
+                    text = {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "How Data is Stored:",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text("All notification data is stored locally on your device. We do not collect, transmit, or share your notifications with any external servers.")
+                            Text(
+                                "Data Security:",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text("Your notifications are encrypted and stored securely in your device's local database. Only you have access to this data.")
+                            Text(
+                                "Data Usage:",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text("Notification data is used solely for displaying and managing your notifications within the app. No data is used for advertising or analytics purposes.")
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { showPrivacyPolicyDialog = false }
+                        ) {
+                            Text("OK", color = main_appColor)
                         }
                     }
                 )
@@ -594,4 +667,93 @@ fun SettingsScreenPreviewDark() {
     JetpackComposeTest1Theme(darkTheme = true) {
         SettingsScreenView(navToScreen = {})
     }
+}
+
+@Composable
+private fun ClearAllDataConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    var confirmationText by remember { mutableStateOf(TextFieldValue("")) }
+    val requiredText = "DELETE"
+    val isConfirmEnabled = confirmationText.text.trim().equals(requiredText, ignoreCase = false)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "⚠️ Clear All Data",
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFDC2626)
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "This will permanently delete all saved notifications. This action cannot be undone.",
+                    color = Color.Black
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "To confirm, please type \"$requiredText\" in the field below:",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+                
+                OutlinedTextField(
+                    value = confirmationText,
+                    onValueChange = { confirmationText = it },
+                    label = { Text("Type: $requiredText") },
+                    placeholder = { Text("Enter $requiredText") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (isConfirmEnabled) Color(0xFF16A34A) else Color(0xFFDC2626),
+                        unfocusedBorderColor = if (isConfirmEnabled) Color(0xFF16A34A) else Color.Gray,
+                        focusedLabelColor = if (isConfirmEnabled) Color(0xFF16A34A) else Color.Gray
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (isConfirmEnabled) {
+                                onConfirm()
+                            }
+                        }
+                    )
+                )
+                
+                if (confirmationText.text.isNotEmpty() && !isConfirmEnabled) {
+                    Text(
+                        text = "Text does not match. Please type exactly \"$requiredText\"",
+                        color = Color(0xFFDC2626),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = isConfirmEnabled,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDC2626),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Gray,
+                    disabledContentColor = Color.White.copy(alpha = 0.6f)
+                )
+            ) {
+                Text("Delete All Data")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text( "Cancel", color = main_appColor)
+            }
+        }
+    )
 }

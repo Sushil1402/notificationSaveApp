@@ -34,4 +34,8 @@ class NotificationDBRepositoryImpl @Inject constructor(private val notificationD
     override suspend fun deleteNotification(id: Long) {
         notificationDao.deleteNotificationById(id)
     }
+
+    override suspend fun clearAllNotifications() {
+        notificationDao.clearAll()
+    }
 }

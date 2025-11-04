@@ -152,8 +152,14 @@ class SettingsViewModel @Inject constructor(
         // Implement import functionality
     }
 
-    fun showClearDataDialog() {
-        // Implement clear data dialog
+    fun clearAllData() {
+        viewModelScope.launch {
+            try {
+//                notificationDBRepo.clearAllNotifications()
+            } catch (e: Exception) {
+                // Handle error if needed
+            }
+        }
     }
 
     sealed class ExportState {

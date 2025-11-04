@@ -13,4 +13,5 @@ interface NotificationDBRepository {
     fun getNotificationsByPackageName(packageName: String): Flow<List<NotificationEntity>>
     suspend fun markAsRead(id: Long)
     suspend fun deleteNotification(id: Long)
+    suspend fun clearAllNotifications()
 }
