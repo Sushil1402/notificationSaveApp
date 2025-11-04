@@ -237,12 +237,31 @@ class AnalyticsViewModel @Inject constructor(
         
         val topApp = appBreakdown.firstOrNull()
         
-        // Calculate weekly trend (7 days ending on selected date)
+        // Calculate weekly trend (7 days starting from Sunday of the current week)
         val weeklyTrend = mutableListOf<DayData>()
         val dayLabels = arrayOf("S", "M", "T", "W", "T", "F", "S")
         
-        for (i in 6 downTo 0) {
-            val dayStart = startOfDay - (i * 24 * 60 * 60 * 1000)
+        // Find Sunday of the week containing the selected date
+        val selectedCalendar = Calendar.getInstance().apply {
+            timeInMillis = selectedDateTimestamp
+        }
+        val dayOfWeekSelected = selectedCalendar.get(Calendar.DAY_OF_WEEK)
+        val daysFromSunday = if (dayOfWeekSelected == Calendar.SUNDAY) 0 else dayOfWeekSelected - Calendar.SUNDAY
+        
+        // Get the Sunday of the current week
+        val weekStartCalendar = Calendar.getInstance().apply {
+            timeInMillis = selectedDateTimestamp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_MONTH, -daysFromSunday)
+        }
+        val weekStartSunday = weekStartCalendar.timeInMillis
+        
+        // Build weekly trend starting from Sunday through Saturday
+        for (i in 0 until 7) {
+            val dayStart = weekStartSunday + (i * 24 * 60 * 60 * 1000)
             val dayEnd = dayStart + (24 * 60 * 60 * 1000) - 1
             
             val dayNotifications = allNotifications.filter {
@@ -254,7 +273,9 @@ class AnalyticsViewModel @Inject constructor(
             }
             val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
             val dayLabel = dayLabels[dayOfWeek - 1]
-            val isSelected = i == 0
+            
+            // Check if this day is the selected date
+            val isSelected = (dayStart >= startOfDay && dayStart < startOfDay + (24 * 60 * 60 * 1000))
             
             weeklyTrend.add(
                 DayData(

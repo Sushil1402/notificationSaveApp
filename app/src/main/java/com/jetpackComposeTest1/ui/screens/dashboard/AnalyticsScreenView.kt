@@ -166,13 +166,13 @@ fun AnalyticsScreenView(
                             colors = CardDefaults.cardColors(containerColor = Color.White),
 
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                 Text(
                                     text = "Hourly Activity",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 HourlyBarChart(
                                     hourlyData = analytics.hourlyData,
                                     barColor = Color(0xFFEA4335)
@@ -388,14 +388,22 @@ fun HeroStatsSection(
                     )
                     
                     if (changeFromYesterday != 0f) {
+                        // Calculate the actual difference (not percentage)
+                        val difference = if (changeFromYesterday != -100f) {
+                            ((changeFromYesterday * totalNotifications) / (100 + changeFromYesterday)).toInt()
+                        } else {
+                            // If change is -100%, means today is 0 and yesterday had some
+                            -totalNotifications
+                        }
+                        
                         Text(
-                            text = if (changeFromYesterday > 0) {
-                                "+${String.format("%.0f", changeFromYesterday)}% vs yesterday"
+                            text = if (difference > 0) {
+                                "+$difference vs yesterday"
                             } else {
-                                "${String.format("%.0f", changeFromYesterday)}% vs yesterday"
+                                "$difference vs yesterday"
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (changeFromYesterday > 0) Color(0xFF4CAF50) else Color.Red,
+                            color = if (difference > 0) Color(0xFF4CAF50) else Color.Red,
                             fontSize = 14.sp
                         )
                     }
