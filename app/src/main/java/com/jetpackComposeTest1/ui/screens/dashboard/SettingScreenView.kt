@@ -1,5 +1,7 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +37,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -64,6 +68,8 @@ fun SettingsScreenView(
     navToScreen: (AppNavigationRoute) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    
     // Provide initial value to prevent NPE during initialization
     val initialSettings = remember {
         SettingsData(
@@ -78,6 +84,7 @@ fun SettingsScreenView(
     }
     
     val settings by viewModel.settings.collectAsState(initial = initialSettings)
+    val exportState by viewModel.exportState.collectAsState()
     
     var hasNotificationAccess by remember { mutableStateOf(true) }
     val autoCleanup = settings.autoCleanup
@@ -93,6 +100,21 @@ fun SettingsScreenView(
     var selectedRetentionDays by remember { mutableStateOf(retentionDays) }
     
     val retentionOptions = listOf(30, 60, 90)
+
+    // Handle export state changes
+    LaunchedEffect(exportState) {
+        when (exportState) {
+            is SettingsViewModel.ExportState.Success -> {
+                // Share the file
+                shareExcelFile(context, (exportState as SettingsViewModel.ExportState.Success).fileUri)
+                viewModel.resetExportState()
+            }
+            is SettingsViewModel.ExportState.Error -> {
+                // Error is shown in dialog
+            }
+            else -> {}
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -194,8 +216,21 @@ fun SettingsScreenView(
                         SettingsNavItem(
                             icon = Icons.Filled.Info,
                             title = "Export All Data",
-                            subtitle = "Export all notifications to file",
-                            onClick = { /* export */ }
+                            subtitle = "Export all notifications to Excel file",
+                            onClick = { 
+                                viewModel.exportAllData(context)
+                            },
+                            trailingContent = {
+                                if (exportState is SettingsViewModel.ExportState.Exporting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = main_appColor,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
+                                }
+                            }
                         )
                         Divider()
                         SettingsActionItem(
@@ -275,9 +310,33 @@ fun SettingsScreenView(
                 )
             }
 
+            // Export error dialog
+            if (exportState is SettingsViewModel.ExportState.Error) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.resetExportState() },
+                    title = { Text("Export Failed") },
+                    text = { Text((exportState as SettingsViewModel.ExportState.Error).message) },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.resetExportState() }) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+
         }
     }
 
+}
+
+private fun shareExcelFile(context: Context, uri: android.net.Uri) {
+    val shareIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_STREAM, uri)
+        type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(shareIntent, "Share Excel File"))
 }
 
 @Composable
@@ -364,7 +423,8 @@ private fun SettingsNavItem(
     title: String,
     subtitle: String,
     trailingText: String? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
     ListItem(
         colors = ListItemDefaults.colors(containerColor = Color.White),
@@ -379,7 +439,7 @@ private fun SettingsNavItem(
                 if (trailingText != null) {
                     Text(trailingText, modifier = Modifier.padding(end = 8.dp))
                 }
-                Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
+                trailingContent?.invoke() ?: Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
             }
         }
     )

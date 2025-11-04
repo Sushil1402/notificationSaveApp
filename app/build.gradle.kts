@@ -40,6 +40,12 @@ android {
     buildFeatures {
         compose = true
     }
+    
+    // Exclude problematic dependencies for Apache POI on Android
+    configurations.all {
+        exclude(group = "stax", module = "stax-api")
+        exclude(group = "javax.xml.stream", module = "stax-api")
+    }
 }
 
 dependencies {
@@ -80,6 +86,10 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp("androidx.hilt:hilt-compiler:1.1.0")
+
+    // Apache POI for Excel export
+    implementation(libs.poi)
+    implementation(libs.poi.ooxml)
 
 
 

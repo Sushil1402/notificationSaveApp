@@ -12,6 +12,8 @@ composeBom = "2025.07.00"
 lifecycleViewmodelCompose = "2.9.3"
 navigationCompose = "2.9.3"
 composeTesting = "1.0.0-alpha05"
+poi = "5.2.5"
+poiOoxml = "5.2.5"
 roomKtx = "2.7.2"
 hiltVersion = "2.56.1"
 hiltNavigationVersion = "1.1.0"
@@ -51,6 +53,8 @@ androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-com
 # WorkManager
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workManagerVersion" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltNavigationVersion" }
+poi = { module = "org.apache.poi:poi", version.ref = "poi" }
+poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poiOoxml" }
 
 
 

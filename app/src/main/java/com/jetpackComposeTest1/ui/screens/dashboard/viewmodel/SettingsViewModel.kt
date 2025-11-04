@@ -1,21 +1,27 @@
 package com.jetpackComposeTest1.ui.screens.dashboard.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
+import com.jetpackComposeTest1.data.repository.database.NotificationDBRepository
 import com.jetpackComposeTest1.model.setting.SettingsData
 import com.jetpackComposeTest1.utils.CleanupManager
+import com.jetpackComposeTest1.utils.NotificationExportManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
-    private val cleanupManager: CleanupManager
+    private val cleanupManager: CleanupManager,
+    private val notificationDBRepo: NotificationDBRepository
 ) : ViewModel() {
 
     private val _settings = MutableStateFlow(
@@ -30,6 +36,10 @@ class SettingsViewModel @Inject constructor(
     )
     )
     val settings: StateFlow<SettingsData> = _settings.asStateFlow()
+
+    // Export state
+    private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
+    val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
 
     init {
         // Load initial settings from preferences
@@ -104,8 +114,38 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun exportAllData() {
-        // Implement export functionality
+    fun exportAllData(context: Context) {
+        viewModelScope.launch {
+            _exportState.value = ExportState.Exporting
+            try {
+                // Get all notifications from database
+                val allNotifications = notificationDBRepo.getAllNotifications().first()
+                
+                if (allNotifications.isEmpty()) {
+                    _exportState.value = ExportState.Error("No notifications to export")
+                    return@launch
+                }
+                
+                // Create export manager and export to Excel
+                val exportManager = NotificationExportManager(context)
+                val result = exportManager.exportToExcel(allNotifications)
+                
+                result.fold(
+                    onSuccess = { uri ->
+                        _exportState.value = ExportState.Success(uri)
+                    },
+                    onFailure = { exception ->
+                        _exportState.value = ExportState.Error(exception.message ?: "Export failed")
+                    }
+                )
+            } catch (e: Exception) {
+                _exportState.value = ExportState.Error(e.message ?: "Export failed")
+            }
+        }
+    }
+
+    fun resetExportState() {
+        _exportState.value = ExportState.Idle
     }
 
     fun importData() {
@@ -114,6 +154,13 @@ class SettingsViewModel @Inject constructor(
 
     fun showClearDataDialog() {
         // Implement clear data dialog
+    }
+
+    sealed class ExportState {
+        object Idle : ExportState()
+        object Exporting : ExportState()
+        data class Success(val fileUri: Uri) : ExportState()
+        data class Error(val message: String) : ExportState()
     }
 }
 
