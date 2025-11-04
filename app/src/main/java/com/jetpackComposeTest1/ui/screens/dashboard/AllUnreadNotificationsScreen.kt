@@ -94,7 +94,8 @@ fun AllUnreadNotificationsScreen(
                 )
             )
         }
-    ) { paddingValues ->
+    )
+    { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

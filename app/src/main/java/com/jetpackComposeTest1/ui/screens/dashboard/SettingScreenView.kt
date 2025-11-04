@@ -8,14 +8,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,19 +25,19 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,9 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +59,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.model.setting.SettingsData
 import com.jetpackComposeTest1.ui.components.AppAlertDialog
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.SettingsViewModel
@@ -67,11 +67,14 @@ import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
+import com.jetpackComposeTest1.ui.navigation.PasscodeScreenRoute
+import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreenView(
     navToScreen: (AppNavigationRoute) -> Unit,
+    onNavigateBack: (() -> Unit),
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -92,16 +95,21 @@ fun SettingsScreenView(
     val settings by viewModel.settings.collectAsState(initial = initialSettings)
     val exportState by viewModel.exportState.collectAsState()
     
-    var hasNotificationAccess by remember { mutableStateOf(true) }
     val autoCleanup = settings.autoCleanup
     val retentionDays = settings.retentionDays
     val storageUsedMb = 45.6f
     val storagePercent = 65.2f
-    var darkModeEnabled by remember { mutableStateOf(false) }
-    var notificationSound by remember { mutableStateOf(true) }
+    
+    // Load passcode state
+    val appPreferences = remember { AppPreferences(context) }
+    var passcodeEnabled by remember { mutableStateOf(appPreferences.isPasscodeEnabled()) }
+    
+    // Refresh passcode state when screen becomes visible
+    LaunchedEffect(Unit) {
+        passcodeEnabled = appPreferences.isPasscodeEnabled()
+    }
     
     // Privacy settings
-    var passcodeEnabled by remember { mutableStateOf(false) }
     var lockscreenWidgetEnabled by remember { mutableStateOf(true) }
     var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
 
@@ -127,278 +135,264 @@ fun SettingsScreenView(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(main_appColor)
-    ) {
-        Column(
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = context.getString(R.string.settings),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { onNavigateBack.invoke() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = context.getString(R.string.back),
+                            tint = Color.White
+                        )
+                    }
+                },
+
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = main_appColor
+                )
+            )
+        }
+    ){  paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .padding(paddingValues)
+                .background(main_appColor)
         ) {
-            // Header
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 10.dp, start = 16.dp, end = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .background(Color.White)
             ) {
-                Text(
-                    text = "Settings",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    SectionCard(modifier = Modifier, title = "Notification Access") {
-                        ListItem(
-                            modifier = Modifier.clickable(role = Role.Button) { navToScreen(AppSelectionScreenRoute) },
-                         colors = ListItemDefaults.colors(containerColor = Color.White),
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Filled.Notifications,
-                                contentDescription = "Notification access",
-                                tint = Color.Black
-                            )
-                        },
-                            headlineContent = { Text("Notification Access") },
-                            supportingContent = { Text("Allow app to read notifications") },
-                            trailingContent = {
-                                if (hasNotificationAccess) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Check,
-                                        contentDescription = "Enabled",
-                                        tint = Color(0xFF16A34A)
-                                    )
-                                } else {
-                                    TextButton(onClick = { /* open notification access */ }) {
-                                        Text("Enable")
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        SectionCard(modifier = Modifier.padding(top = 20.dp), title = "Storage Management") {
+                            SettingsSwitchItemContent(
+                                icon = Icons.Filled.Delete,
+                                title = "Auto Cleanup",
+                                subtitle = {
+                                    if (autoCleanup) {
+                                        val annotatedText = buildAnnotatedString {
+                                            append("Delete notifications older than ")
+                                            withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else Color.Black)) {
+                                                append("$retentionDays days")
+                                            }
+                                        }
+                                        Text(annotatedText)
+                                    } else {
+                                        Text("Automatically delete old notifications")
+                                    }
+                                },
+                                checked = autoCleanup,
+                                onCheckedChange = { newValue ->
+                                    if (newValue && !autoCleanup) {
+                                        // User is enabling auto cleanup - show retention period bottom sheet
+                                        selectedRetentionDays = retentionDays
+                                        showRetentionBottomSheet = true
+                                    } else {
+                                        // User is disabling - allow directly
+                                        viewModel.setAutoCleanupEnabled(newValue)
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
-                }
 
-                item {
-                    SectionCard(modifier = Modifier,title = "Storage Management") {
-                        SettingsSwitchItemContent(
-                            icon = Icons.Filled.Delete,
-                            title = "Auto Cleanup",
-                            subtitle = {
-                                if (autoCleanup) {
-                                    val annotatedText = buildAnnotatedString {
-                                        append("Delete notifications older than ")
-                                        withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else Color.Black)) {
-                                            append("$retentionDays days")
+                    item {
+                        SectionCard(modifier = Modifier,title = "Export & Backup") {
+                            SettingsNavItem(
+                                icon = Icons.Filled.Info,
+                                title = "Export All Data",
+                                subtitle = "Export all notifications to Excel file",
+                                onClick = {
+                                    viewModel.exportAllData(context)
+                                },
+                                trailingContent = {
+                                    if (exportState is SettingsViewModel.ExportState.Exporting) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            color = main_appColor,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
+                                    }
+                                }
+                            )
+                            Divider()
+                            SettingsActionItem(
+                                icon = Icons.Filled.Delete,
+                                title = "Clear All Data",
+                                subtitle = "Delete all saved notifications",
+                                onClick = { showClearAllDialog = true }
+                            )
+                        }
+                    }
+
+                    item {
+                        SectionCard(modifier = Modifier, title = "Privacy") {
+                            SettingsSwitchItem(
+                                icon = Icons.Filled.Info,
+                                title = "Passcode",
+                                subtitle = "Use passcode to unlock Notisave.",
+                                checked = passcodeEnabled,
+                                onCheckedChange = { enabled ->
+                                    if (enabled) {
+                                        // Clear disable intent and navigate to setup
+                                        appPreferences.setPasscodeDisableIntent(false)
+                                        navToScreen(PasscodeScreenRoute)
+                                    } else {
+                                        // Set disable intent and navigate to verification
+                                        val savedPasscode = appPreferences.getPasscode()
+                                        if (savedPasscode != null) {
+                                            appPreferences.setPasscodeDisableIntent(true)
+                                            navToScreen(PasscodeScreenRoute)
+                                        } else {
+                                            // No passcode set, just disable
+                                            appPreferences.setPasscodeEnabled(false)
+                                            passcodeEnabled = false
                                         }
                                     }
-                                    Text(annotatedText)
-                                } else {
-                                    Text("Automatically delete old notifications")
                                 }
-                            },
-                            checked = autoCleanup,
-                            onCheckedChange = { newValue ->
-                                if (newValue && !autoCleanup) {
-                                    // User is enabling auto cleanup - show retention period bottom sheet
-                                    selectedRetentionDays = retentionDays
-                                    showRetentionBottomSheet = true
-                                } else {
-                                    // User is disabling - allow directly
-                                    viewModel.setAutoCleanupEnabled(newValue)
-                                }
+                            )
+                            Divider()
+                            SettingsSwitchItem(
+                                icon = Icons.Filled.Info,
+                                title = "Lockscreen widget",
+                                subtitle = "Show the widget on lockscreen",
+                                checked = lockscreenWidgetEnabled,
+                                onCheckedChange = { lockscreenWidgetEnabled = it }
+                            )
+                            Divider()
+                            SettingsNavItem(
+                                icon = Icons.Filled.Info,
+                                title = "Privacy policy",
+                                subtitle = "How data is stored",
+                                onClick = { showPrivacyPolicyDialog = true }
+                            )
+                        }
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.padding(bottom = 200.dp))
+                    }
+                }
+
+                if (showRetentionBottomSheet) {
+                    RetentionPeriodBottomSheet(
+                        currentDays = selectedRetentionDays,
+                        retentionOptions = retentionOptions,
+                        onDismiss = { showRetentionBottomSheet = false },
+                        onConfirm = { newDays ->
+                            viewModel.setRetentionDays(newDays)
+                            viewModel.setAutoCleanupEnabled(true)
+                            showRetentionBottomSheet = false
+                        }
+                    )
+                }
+
+                if (showClearAllDialog) {
+                    ClearAllDataConfirmationDialog(
+                        onDismiss = { showClearAllDialog = false },
+                        onConfirm = {
+                            viewModel.clearAllData()
+                            showClearAllDialog = false
+                        }
+                    )
+                }
+
+                if (showAutoCleanupDialog) {
+                    AppAlertDialog(
+                        onDismissRequest = { showAutoCleanupDialog = false },
+                        title = "Enable Auto Cleanup?",
+                        text = "Auto cleanup will automatically delete notifications older than the retention period. This action cannot be undone.",
+                        confirmButtonText = "Enable",
+                        dismissButtonText = "Cancel",
+                        confirmButton = {
+                            viewModel.setAutoCleanupEnabled(true)
+                            showAutoCleanupDialog = false
+                        },
+                        dismissButton = {
+                            showAutoCleanupDialog = false
+                        }
+                    )
+                }
+
+                // Export error dialog
+                if (exportState is SettingsViewModel.ExportState.Error) {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.resetExportState() },
+                        title = { Text("Export Failed") },
+                        text = { Text((exportState as SettingsViewModel.ExportState.Error).message) },
+                        confirmButton = {
+                            TextButton(onClick = { viewModel.resetExportState() }) {
+                                Text("OK")
                             }
-                        )
-                    }
+                        }
+                    )
                 }
 
-                item {
-                    SectionCard(modifier = Modifier,title = "Export & Backup") {
-                        SettingsNavItem(
-                            icon = Icons.Filled.Info,
-                            title = "Export All Data",
-                            subtitle = "Export all notifications to Excel file",
-                            onClick = { 
-                                viewModel.exportAllData(context)
-                            },
-                            trailingContent = {
-                                if (exportState is SettingsViewModel.ExportState.Exporting) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        color = main_appColor,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
-                                }
+                // Privacy Policy dialog
+                if (showPrivacyPolicyDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showPrivacyPolicyDialog = false },
+                        title = {
+                            Text(
+                                "Privacy Policy",
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    "How Data is Stored:",
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text("All notification data is stored locally on your device. We do not collect, transmit, or share your notifications with any external servers.")
+                                Text(
+                                    "Data Security:",
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text("Your notifications are encrypted and stored securely in your device's local database. Only you have access to this data.")
+                                Text(
+                                    "Data Usage:",
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text("Notification data is used solely for displaying and managing your notifications within the app. No data is used for advertising or analytics purposes.")
                             }
-                        )
-                        Divider()
-                        SettingsActionItem(
-                            icon = Icons.Filled.Delete,
-                            title = "Clear All Data",
-                            subtitle = "Delete all saved notifications",
-                            onClick = { showClearAllDialog = true }
-                        )
-                    }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = { showPrivacyPolicyDialog = false }
+                            ) {
+                                Text("OK", color = main_appColor)
+                            }
+                        }
+                    )
                 }
 
-                item {
-                    SectionCard(modifier = Modifier, title = "Privacy") {
-                        SettingsSwitchItem(
-                            icon = Icons.Filled.Info,
-                            title = "Passcode",
-                            subtitle = "Use passcode to unlock Notisave.",
-                            checked = passcodeEnabled,
-                            onCheckedChange = { passcodeEnabled = it }
-                        )
-                        Divider()
-                        SettingsSwitchItem(
-                            icon = Icons.Filled.Info,
-                            title = "Lockscreen widget",
-                            subtitle = "Show the widget on lockscreen",
-                            checked = lockscreenWidgetEnabled,
-                            onCheckedChange = { lockscreenWidgetEnabled = it }
-                        )
-                        Divider()
-                        SettingsNavItem(
-                            icon = Icons.Filled.Info,
-                            title = "Privacy policy",
-                            subtitle = "How data is stored",
-                            onClick = { showPrivacyPolicyDialog = true }
-                        )
-                    }
-                }
-
-                item {
-                    SectionCard(modifier = Modifier.padding(bottom = 200.dp),title = "App Preferences") {
-                        SettingsSwitchItem(
-                            icon = Icons.Filled.Info,
-                            title = "Dark Mode",
-                            subtitle = "Switch to dark theme",
-                            checked = darkModeEnabled,
-                            onCheckedChange = { darkModeEnabled = it }
-                        )
-                        Divider()
-                        SettingsSwitchItem(
-                            icon = Icons.Filled.Info,
-                            title = "Notification Sound",
-                            subtitle = "Play sound when saving notifications",
-                            checked = notificationSound,
-                            onCheckedChange = { notificationSound = it }
-                        )
-                    }
-                }
             }
-
-            if (showRetentionBottomSheet) {
-                RetentionPeriodBottomSheet(
-                    currentDays = selectedRetentionDays,
-                    retentionOptions = retentionOptions,
-                    onDismiss = { showRetentionBottomSheet = false },
-                    onConfirm = { newDays ->
-                        viewModel.setRetentionDays(newDays)
-                        viewModel.setAutoCleanupEnabled(true)
-                        showRetentionBottomSheet = false
-                    }
-                )
-            }
-
-            if (showClearAllDialog) {
-                ClearAllDataConfirmationDialog(
-                    onDismiss = { showClearAllDialog = false },
-                    onConfirm = {
-                        viewModel.clearAllData()
-                        showClearAllDialog = false
-                    }
-                )
-            }
-
-            if (showAutoCleanupDialog) {
-                AppAlertDialog(
-                    onDismissRequest = { showAutoCleanupDialog = false },
-                    title = "Enable Auto Cleanup?",
-                    text = "Auto cleanup will automatically delete notifications older than the retention period. This action cannot be undone.",
-                    confirmButtonText = "Enable",
-                    dismissButtonText = "Cancel",
-                    confirmButton = {
-                        viewModel.setAutoCleanupEnabled(true)
-                        showAutoCleanupDialog = false
-                    },
-                    dismissButton = {
-                        showAutoCleanupDialog = false
-                    }
-                )
-            }
-
-            // Export error dialog
-            if (exportState is SettingsViewModel.ExportState.Error) {
-                AlertDialog(
-                    onDismissRequest = { viewModel.resetExportState() },
-                    title = { Text("Export Failed") },
-                    text = { Text((exportState as SettingsViewModel.ExportState.Error).message) },
-                    confirmButton = {
-                        TextButton(onClick = { viewModel.resetExportState() }) {
-                            Text("OK")
-                        }
-                    }
-                )
-            }
-
-            // Privacy Policy dialog
-            if (showPrivacyPolicyDialog) {
-                AlertDialog(
-                    onDismissRequest = { showPrivacyPolicyDialog = false },
-                    title = { 
-                        Text(
-                            "Privacy Policy",
-                            fontWeight = FontWeight.Bold
-                        ) 
-                    },
-                    text = {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                "How Data is Stored:",
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text("All notification data is stored locally on your device. We do not collect, transmit, or share your notifications with any external servers.")
-                            Text(
-                                "Data Security:",
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text("Your notifications are encrypted and stored securely in your device's local database. Only you have access to this data.")
-                            Text(
-                                "Data Usage:",
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text("Notification data is used solely for displaying and managing your notifications within the app. No data is used for advertising or analytics purposes.")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = { showPrivacyPolicyDialog = false }
-                        ) {
-                            Text("OK", color = main_appColor)
-                        }
-                    }
-                )
-            }
-
         }
     }
+
+
+
 
 }
 
@@ -657,7 +651,7 @@ private fun RetentionPeriodBottomSheet(
 @Composable
 fun SettingsScreenPreview() {
     JetpackComposeTest1Theme(darkTheme = false) {
-        SettingsScreenView(navToScreen = {})
+        SettingsScreenView(navToScreen = {}, onNavigateBack = {})
     }
 }
 
@@ -665,7 +659,7 @@ fun SettingsScreenPreview() {
 @Composable
 fun SettingsScreenPreviewDark() {
     JetpackComposeTest1Theme(darkTheme = true) {
-        SettingsScreenView(navToScreen = {})
+        SettingsScreenView(navToScreen = {}, onNavigateBack = {})
     }
 }
 

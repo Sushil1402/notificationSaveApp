@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import com.jetpackComposeTest1.ui.screens.dashboard.AnalyticsScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.HomeScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.GroupsScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.SettingsScreenView
+import com.jetpackComposeTest1.ui.screens.dashboard.MoreScreenView
 import com.jetpackComposeTest1.ui.theme.main_appColor
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -53,9 +55,9 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
             MainNavScreen.Analytics.route
         ),
         com.jetpackComposeTest1.ui.navigation.NavigationItem(
-            "Settings",
-            Icons.Default.Settings,
-            MainNavScreen.Settings.route
+            "More",
+            Icons.Default.MoreVert,
+            MainNavScreen.More.route
         ),
     )
 
@@ -119,7 +121,7 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
                 composable(MainNavScreen.Home.route) { HomeScreenView(navToScreen) }
                 composable(MainNavScreen.Groups.route) { GroupsScreenView(navToScreen) }
                 composable(MainNavScreen.Analytics.route) { AnalyticsScreenView(navToScreen = navToScreen) }
-                composable(MainNavScreen.Settings.route) { SettingsScreenView(navToScreen) }
+                composable(MainNavScreen.More.route) { MoreScreenView(navToScreen) }
             }
         }
     }

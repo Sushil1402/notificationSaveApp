@@ -21,6 +21,9 @@ class AppPreferences @Inject constructor(
         private const val KEY_AUTO_CLEANUP_ENABLED = "auto_cleanup_enabled"
         private const val KEY_RETENTION_DAYS = "retention_days"
         private const val KEY_LAST_CLEANUP_TIMESTAMP = "last_cleanup_timestamp"
+        private const val KEY_PASSCODE_ENABLED = "passcode_enabled"
+        private const val KEY_PASSCODE = "passcode"
+        private const val KEY_PASSCODE_DISABLE_INTENT = "passcode_disable_intent"
     }
 
     fun isAppSelectionCompleted(): Boolean {
@@ -63,5 +66,35 @@ class AppPreferences @Inject constructor(
 
     fun setLastCleanupTimestamp(timestamp: Long) {
         prefs.edit().putLong(KEY_LAST_CLEANUP_TIMESTAMP, timestamp).apply()
+    }
+
+    // Passcode Settings
+    fun isPasscodeEnabled(): Boolean {
+        return prefs.getBoolean(KEY_PASSCODE_ENABLED, false)
+    }
+
+    fun setPasscodeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_PASSCODE_ENABLED, enabled).apply()
+    }
+
+    fun getPasscode(): String? {
+        val passcode = prefs.getString(KEY_PASSCODE, null)
+        return if (passcode.isNullOrEmpty()) null else passcode
+    }
+
+    fun setPasscode(passcode: String) {
+        prefs.edit().putString(KEY_PASSCODE, passcode).apply()
+    }
+
+    fun clearPasscode() {
+        prefs.edit().remove(KEY_PASSCODE).apply()
+    }
+
+    fun setPasscodeDisableIntent(intent: Boolean) {
+        prefs.edit().putBoolean(KEY_PASSCODE_DISABLE_INTENT, intent).apply()
+    }
+
+    fun getPasscodeDisableIntent(): Boolean {
+        return prefs.getBoolean(KEY_PASSCODE_DISABLE_INTENT, false)
     }
 }

@@ -6,6 +6,7 @@ sealed class MainNavScreen(val route: String) {
     object Home: MainNavScreen("home_screen")
     object Groups: MainNavScreen("groups_screen")
     object Analytics: MainNavScreen("analytics_screen")
+    object More: MainNavScreen("more_screen")
     object Settings: MainNavScreen("settings_screen")
 }
 
@@ -62,3 +63,6 @@ data class GroupAppsRoute(
     val groupId: String,
     val groupName: String
 ): AppNavigationRoute
+
+@Serializable
+object PasscodeScreenRoute: AppNavigationRoute

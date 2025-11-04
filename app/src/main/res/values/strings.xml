@@ -60,4 +60,7 @@
     <string name="today">Today</string>
     <string name="apps">Apps</string>
 
+    <!-- Setting Screen -->
+    <string name="settings">Settings</string>
+
 </resources>
