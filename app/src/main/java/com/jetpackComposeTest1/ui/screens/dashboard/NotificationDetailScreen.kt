@@ -1,6 +1,7 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,12 +17,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -39,11 +44,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.model.notification.NotificationItem
 import com.jetpackComposeTest1.ui.components.AppAlertDialog
+import com.jetpackComposeTest1.ui.components.MenuOption
+import com.jetpackComposeTest1.ui.components.MoreOptionsMenu
 import com.jetpackComposeTest1.ui.components.SearchEmptyStateMessage
 import com.jetpackComposeTest1.ui.components.SearchToolBar
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.NotificationDetailViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.theme.unreadIndicatorColor
+import com.jetpackComposeTest1.ui.utils.Utils.shareExcelFile
 import com.jetpackComposeTest1.ui.utils.toImageBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +73,7 @@ fun NotificationDetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
+    val exportState by viewModel.exportState.collectAsState()
 
     var showMarkAllDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -84,11 +93,27 @@ fun NotificationDetailScreen(
         }
     }
 
+    // Handle export state changes
+    LaunchedEffect(exportState) {
+        when (exportState) {
+            is NotificationDetailViewModel.ExportState.Success -> {
+                // Share the file using common utility function
+                shareExcelFile(context, (exportState as NotificationDetailViewModel.ExportState.Success).fileUri)
+                viewModel.resetExportState()
+            }
+            is NotificationDetailViewModel.ExportState.Error -> {
+                // Error is shown in dialog
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // App icon
@@ -108,12 +133,14 @@ fun NotificationDetailScreen(
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = appName,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             if (unreadCount > 0) {
                                 Text(
@@ -131,7 +158,7 @@ fun NotificationDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = context.getString(R.string.back),
                             tint = Color.White
                         )
@@ -145,13 +172,25 @@ fun NotificationDetailScreen(
                             tint = Color.White
                         )
                     }
-                    IconButton(onClick = { showFilterSheet = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Build,
-                            contentDescription = "Filter",
-                            tint = Color.White
-                        )
-                    }
+                    MoreOptionsMenu(
+                        options = listOf(
+                            MenuOption(
+                                title = context.getString(R.string.filter),
+                                icon = Icons.Default.FilterList,
+                                iconTint = main_appColor,
+                                onClick = { showFilterSheet = true }
+                            ),
+                            MenuOption(
+                                title = context.getString(R.string.export),
+                                icon = Icons.Default.FileUpload,
+                                iconTint = main_appColor,
+                                onClick = {
+                                    viewModel.exportAppNotifications(context, packageName, appName)
+                                }
+                            )
+                        ),
+                        iconTint = Color.White
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = main_appColor
@@ -170,6 +209,63 @@ fun NotificationDetailScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
+                // Export Progress Indicator
+                val isExporting = exportState is NotificationDetailViewModel.ExportState.Exporting
+                AnimatedVisibility(
+                    visible = isExporting,
+                    enter = slideInVertically(
+                        initialOffsetY = { -it },
+                        animationSpec = tween(durationMillis = 300)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 300)),
+                    exit = slideOutVertically(
+                        targetOffsetY = { -it },
+                        animationSpec = tween(durationMillis = 300)
+                    ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = main_appColor.copy(alpha = 0.95f),
+                        shadowElevation = 4.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text(
+                                        text = "Exporting notifications...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(3.dp),
+                                color = Color.White,
+                                trackColor = Color.White.copy(alpha = 0.3f)
+                            )
+                        }
+                    }
+                }
+
                 // Search Bar
                 AnimatedVisibility(
                     visible = isSearchActive,
@@ -321,6 +417,20 @@ fun NotificationDetailScreen(
                 showDeleteDialog = false
                 selectedNotification = null
             })
+    }
+
+    // Export error dialog
+    if (exportState is NotificationDetailViewModel.ExportState.Error) {
+        AlertDialog(
+            onDismissRequest = { viewModel.resetExportState() },
+            title = { Text("Export Failed") },
+            text = { Text((exportState as NotificationDetailViewModel.ExportState.Error).message) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.resetExportState() }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -87,7 +88,7 @@ fun MoreScreenView(
                 item {
                     SectionCard(modifier = Modifier, title = "App Preferences") {
                         MoreSwitchItem(
-                            icon = Icons.Filled.Info,
+                            icon = Icons.Filled.DarkMode,
                             title = "Dark Mode",
                             subtitle = "Switch to dark theme",
                             checked = darkModeEnabled,
@@ -113,7 +114,7 @@ fun MoreScreenView(
                         )
                         Divider()
                         MoreNavItem(
-                            icon = Icons.Filled.Info,
+                            icon = Icons.Filled.SupportAgent,
                             title = "Help & Support",
                             subtitle = "Get help and contact support",
                             onClick = { /* Navigate to Help */ }
@@ -183,7 +184,7 @@ private fun MoreNavItem(
         headlineContent = { Text(title) },
         supportingContent = { Text(subtitle) },
         trailingContent = {
-            Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = main_appColor)
+            Icon(Icons.AutoMirrored.Default.KeyboardArrowRight, contentDescription = null, tint = main_appColor)
         }
     )
 }

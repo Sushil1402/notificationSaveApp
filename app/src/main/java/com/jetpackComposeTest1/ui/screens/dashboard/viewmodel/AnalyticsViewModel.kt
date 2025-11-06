@@ -62,14 +62,19 @@ class AnalyticsViewModel @Inject constructor(
     private val _dailyAnalytics = MutableStateFlow<DailyAnalyticsData?>(null)
     val dailyAnalytics: StateFlow<DailyAnalyticsData?> = _dailyAnalytics.asStateFlow()
 
+    private val _weeklyAppBreakdown = MutableStateFlow<List<AppUsageData>>(emptyList())
+    val weeklyAppBreakdown: StateFlow<List<AppUsageData>> = _weeklyAppBreakdown.asStateFlow()
+
     init {
         loadAnalyticsData()
         loadDailyAnalytics()
+        loadWeeklyAppBreakdown()
     }
 
     fun selectDate(dateTimestamp: Long) {
         _selectedDate.value = dateTimestamp
         loadDailyAnalytics()
+        loadWeeklyAppBreakdown()
     }
 
     fun selectPreviousDay() {
@@ -160,6 +165,72 @@ class AnalyticsViewModel @Inject constructor(
                 _dailyAnalytics.value = dailyData
             }
         }
+    }
+
+    private fun loadWeeklyAppBreakdown() {
+        viewModelScope.launch {
+            combine(
+                notificationDao.getAllNotifications(),
+                _selectedDate
+            ) { notifications, selectedDate ->
+                calculateWeeklyAppBreakdown(notifications, selectedDate)
+            }.collect { weeklyBreakdown ->
+                _weeklyAppBreakdown.value = weeklyBreakdown
+            }
+        }
+    }
+
+    private fun calculateWeeklyAppBreakdown(
+        allNotifications: List<NotificationEntity>,
+        selectedDateTimestamp: Long
+    ): List<AppUsageData> {
+        // Find Sunday of the week containing the selected date
+        val selectedCalendar = Calendar.getInstance().apply {
+            timeInMillis = selectedDateTimestamp
+        }
+        val dayOfWeekSelected = selectedCalendar.get(Calendar.DAY_OF_WEEK)
+        val daysFromSunday = if (dayOfWeekSelected == Calendar.SUNDAY) 0 else dayOfWeekSelected - Calendar.SUNDAY
+        
+        // Get the Sunday of the current week (start of week)
+        val weekStartCalendar = Calendar.getInstance().apply {
+            timeInMillis = selectedDateTimestamp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_MONTH, -daysFromSunday)
+        }
+        val weekStart = weekStartCalendar.timeInMillis
+        
+        // Get the Saturday of the current week (end of week)
+        val weekEnd = weekStart + (7 * 24 * 60 * 60 * 1000) - 1
+        
+        // Get all notifications for the week
+        val weekNotifications = allNotifications.filter {
+            it.timestamp >= weekStart && it.timestamp <= weekEnd
+        }
+        
+        // Calculate app breakdown for the week
+        val appGroups = weekNotifications.groupBy { it.packageName }
+        val weekTotalCount = weekNotifications.size
+        
+        val weeklyBreakdown = appGroups.entries
+            .map { (packageName, appNotifications) ->
+                val appName = getAppName(packageName)
+                AppUsageData(
+                    name = appName,
+                    packageName = packageName,
+                    count = appNotifications.size,
+                    percentage = if (weekTotalCount > 0) {
+                        (appNotifications.size.toFloat() / weekTotalCount * 100)
+                    } else 0f,
+                    color = getAppColor(packageName)
+                )
+            }
+            .sortedByDescending { it.count }
+            .take(5) // Top 5 apps
+        
+        return weeklyBreakdown
     }
 
     private fun calculateDailyAnalytics(

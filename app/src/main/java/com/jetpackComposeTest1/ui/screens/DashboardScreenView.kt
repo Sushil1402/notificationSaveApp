@@ -10,8 +10,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -46,12 +47,12 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
         ),
         com.jetpackComposeTest1.ui.navigation.NavigationItem(
             "Groups",
-            Icons.Default.Info,
+            Icons.Default.Group,
             MainNavScreen.Groups.route
         ),
         com.jetpackComposeTest1.ui.navigation.NavigationItem(
             "Analytics",
-            Icons.Default.Info,
+            Icons.Default.BarChart,
             MainNavScreen.Analytics.route
         ),
         com.jetpackComposeTest1.ui.navigation.NavigationItem(

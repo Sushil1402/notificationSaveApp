@@ -37,19 +37,52 @@ class AllUnreadNotificationsViewModel @Inject constructor(
 
     // Original notifications for filtering
     private val _allNotifications = MutableStateFlow<List<NotificationItem>>(emptyList())
+    
+    // Keep timestamp to support date grouping without changing NotificationItem
+    private val _allWithTime = MutableStateFlow<List<Pair<Long, NotificationItem>>>(emptyList())
+
+    // Grouped notifications for sticky date headers
+    data class DateGroup(
+        val dateStartMillis: Long,
+        val dateLabel: String,
+        val items: List<NotificationItem>
+    )
+
+    private val _groupedNotifications = MutableStateFlow<List<DateGroup>>(emptyList())
+    val groupedNotifications: StateFlow<List<DateGroup>> = _groupedNotifications.asStateFlow()
 
     init {
-        // Combine search query with all notifications to filter
+        // Combine search query, raw list to produce filtered list and groups
         viewModelScope.launch {
-            combine(_searchQuery, _allNotifications) { query, notifications ->
-                if (query.isBlank()) {
-                    notifications
-                } else {
-                    filterNotifications(notifications, query)
-                }
-            }.collect { filtered ->
-                _filteredNotifications.value = filtered
-                _notifications.value = filtered
+            combine(_searchQuery, _allWithTime) { query, allWithTime ->
+                // Map to items for search
+                val items = allWithTime.map { it.second }
+                val afterSearch = if (query.isBlank()) items else filterNotifications(items, query)
+
+                // Update flat lists
+                _filteredNotifications.value = afterSearch
+                _notifications.value = afterSearch
+
+                // Build groups by day from allWithTime but only retaining items in afterSearch
+                val allowedIds = afterSearch.map { it.id }.toSet()
+                val grouped = allWithTime
+                    .filter { it.second.id in allowedIds }
+                    .groupBy { dayStart(it.first) }
+                    .toSortedMap(compareByDescending { it }) // newest day first
+                    .map { (dayStart, pairs) ->
+                        val itemsForDay = pairs
+                            .sortedByDescending { it.first }
+                            .map { it.second }
+                        DateGroup(
+                            dateStartMillis = dayStart,
+                            dateLabel = formatDateHeader(dayStart),
+                            items = itemsForDay
+                        )
+                    }
+
+                grouped
+            }.collect { groups ->
+                _groupedNotifications.value = groups
             }
         }
     }
@@ -59,36 +92,38 @@ class AllUnreadNotificationsViewModel @Inject constructor(
             _isLoading.value = true
 
             notificationDBRepo.getNotificationsByReadStatus(isRead = false).collect { entities ->
-                val notificationItems = entities
-                    .sortedByDescending { it.timestamp }
-                    .map { entity ->
-                        // Get app name and icon
-                        val appName = try {
-                            val appInfo = context.packageManager.getApplicationInfo(entity.packageName, 0)
-                            context.packageManager.getApplicationLabel(appInfo).toString()
-                        } catch (e: Exception) {
-                            entity.packageName
-                        }
-                        
-                        val appIcon = try {
-                            Utils.getAppIcon(context, entity.packageName)
-                        } catch (e: Exception) {
-                            null
-                        }
-
-                        NotificationItem(
-                            id = entity.id.toString(),
-                            title = entity.title,
-                            message = entity.text,
-                            isRead = entity.isRead,
-                            timeAgo = formatTimeAgo(entity.timestamp),
-                            packageName = entity.packageName,
-                            appName = appName,
-                            appIcon = appIcon
-                        )
+                val sorted = entities.sortedByDescending { it.timestamp }
+                val withTime = sorted.map { entity ->
+                    // Get app name and icon
+                    val appName = try {
+                        val appInfo = context.packageManager.getApplicationInfo(entity.packageName, 0)
+                        context.packageManager.getApplicationLabel(appInfo).toString()
+                    } catch (e: Exception) {
+                        entity.packageName
+                    }
+                    
+                    val appIcon = try {
+                        Utils.getAppIcon(context, entity.packageName)
+                    } catch (e: Exception) {
+                        null
                     }
 
+                    val item = NotificationItem(
+                        id = entity.id.toString(),
+                        title = entity.title,
+                        message = entity.text,
+                        isRead = entity.isRead,
+                        timeAgo = formatTimeAgo(entity.timestamp),
+                        packageName = entity.packageName,
+                        appName = appName,
+                        appIcon = appIcon
+                    )
+                    entity.timestamp to item
+                }
+                val notificationItems = withTime.map { it.second }
+
                 _allNotifications.value = notificationItems
+                _allWithTime.value = withTime
                 _isLoading.value = false
             }
         }
@@ -107,6 +142,9 @@ class AllUnreadNotificationsViewModel @Inject constructor(
                     } else {
                         notification
                     }
+                }
+                _allWithTime.value = _allWithTime.value.map { (ts, notification) ->
+                    if (notification.id == notificationId) ts to notification.copy(isRead = true) else ts to notification
                 }
             } catch (e: Exception) {
                 // Handle error
@@ -130,6 +168,7 @@ class AllUnreadNotificationsViewModel @Inject constructor(
             _allNotifications.value = _allNotifications.value.map { notification ->
                 notification.copy(isRead = true)
             }
+            _allWithTime.value = _allWithTime.value.map { (ts, notification) -> ts to notification.copy(isRead = true) }
         }
     }
 
@@ -141,6 +180,7 @@ class AllUnreadNotificationsViewModel @Inject constructor(
 
                 // Update local state
                 _allNotifications.value = _allNotifications.value.filter { it.id != notificationId }
+                _allWithTime.value = _allWithTime.value.filter { it.second.id != notificationId }
             } catch (e: Exception) {
                 // Handle error
             }
@@ -186,5 +226,22 @@ class AllUnreadNotificationsViewModel @Inject constructor(
             notification.message.lowercase().contains(lowercaseQuery) ||
             notification.appName.lowercase().contains(lowercaseQuery)
         }
+    }
+
+    // Utilities for date grouping
+    private fun dayStart(timeMillis: Long): Long {
+        val cal = java.util.Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        return cal.timeInMillis
+    }
+
+    private fun formatDateHeader(dayStartMillis: Long): String {
+        val sdf = java.text.SimpleDateFormat("EEEE, d MMMM", java.util.Locale.getDefault())
+        return sdf.format(java.util.Date(dayStartMillis))
     }
 }

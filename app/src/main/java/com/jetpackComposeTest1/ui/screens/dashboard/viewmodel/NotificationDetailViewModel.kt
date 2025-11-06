@@ -1,16 +1,19 @@
 package com.jetpackComposeTest1.ui.screens.dashboard.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetpackComposeTest1.data.repository.database.NotificationDBRepository
 import com.jetpackComposeTest1.model.notification.NotificationItem
 import com.jetpackComposeTest1.ui.utils.Utils
+import com.jetpackComposeTest1.utils.NotificationExportManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -268,5 +271,53 @@ class NotificationDetailViewModel @Inject constructor(
 
     fun setDateFilter(dateMillis: Long?) {
         _selectedDateFilter.value = dateMillis?.let { dayStart(it) }
+    }
+
+    // Export state for current app notifications
+    private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
+    val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
+
+    private var currentPackageName: String = ""
+
+    fun exportAppNotifications(context: Context, packageName: String, appName: String) {
+        viewModelScope.launch {
+            _exportState.value = ExportState.Exporting
+            currentPackageName = packageName
+            try {
+                // Get all notifications for this app from database
+                val appNotifications = notificationDBRepo.getNotificationsByPackageName(packageName).first()
+                
+                if (appNotifications.isEmpty()) {
+                    _exportState.value = ExportState.Error("No notifications to export for this app")
+                    return@launch
+                }
+                
+                // Create export manager and export to Excel with custom file name prefix (app name)
+                val exportManager = NotificationExportManager(context)
+                val result = exportManager.exportToExcel(appNotifications, customFileNamePrefix = appName)
+                
+                result.fold(
+                    onSuccess = { uri ->
+                        _exportState.value = ExportState.Success(uri)
+                    },
+                    onFailure = { exception ->
+                        _exportState.value = ExportState.Error(exception.message ?: "Export failed")
+                    }
+                )
+            } catch (e: Exception) {
+                _exportState.value = ExportState.Error(e.message ?: "Export failed")
+            }
+        }
+    }
+
+    fun resetExportState() {
+        _exportState.value = ExportState.Idle
+    }
+
+    sealed class ExportState {
+        object Idle : ExportState()
+        object Exporting : ExportState()
+        data class Success(val fileUri: Uri) : ExportState()
+        data class Error(val message: String) : ExportState()
     }
 }

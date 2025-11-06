@@ -51,6 +51,7 @@ fun AnalyticsScreenView(
     val context = LocalContext.current
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyAnalytics by viewModel.dailyAnalytics.collectAsState()
+    val weeklyAppBreakdown by viewModel.weeklyAppBreakdown.collectAsState()
 
     val dateFormatter = remember { SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()) }
     val dateString = remember(selectedDate) {
@@ -156,6 +157,8 @@ fun AnalyticsScreenView(
                         }
                     }
 
+
+
                     // Hourly Activity Chart
         item {
             Card(
@@ -181,18 +184,18 @@ fun AnalyticsScreenView(
                         }
                     }
 
-                    // App Breakdown List
+                    // Today App Breakdown List
                     item {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 8.dp, bottom = 200.dp, end = 16.dp, start = 16.dp),
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                                    text = "App Breakdown",
+                                    text = "Today App Breakdown",
                         style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
 
@@ -230,6 +233,70 @@ fun AnalyticsScreenView(
                                             }
                                         )
                                         if (index < analytics.appBreakdown.size - 1) {
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Weekly App Breakdown Section
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, bottom = 200.dp, end = 16.dp, start = 16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Weekly App Breakdown",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Top 5 apps this week",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                    fontSize = 12.sp
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                if (weeklyAppBreakdown.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 32.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No notifications for this week",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                } else {
+                                    val maxCount = weeklyAppBreakdown.firstOrNull()?.count ?: 1
+                                    weeklyAppBreakdown.forEachIndexed { index, app ->
+                                        WeeklyAppBreakdownRow(
+                                            context = context,
+                                            app = app,
+                                            maxCount = maxCount,
+                                            onClick = {
+                                                navToScreen(
+                                                    NotificationDetailRoute(
+                                                        packageName = app.packageName,
+                                                        appName = app.name,
+                                                        isFromNotification = false,
+                                                        selectedDate = selectedDate
+                                                    )
+                                                )
+                                            }
+                                        )
+                                        if (index < weeklyAppBreakdown.size - 1) {
                                             Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }
@@ -724,6 +791,111 @@ fun DatePickerDialogComposable(
         }
         
         datePickerDialog.show()
+    }
+}
+
+@Composable
+fun WeeklyAppBreakdownRow(
+    context: android.content.Context,
+    app: AppUsageData,
+    maxCount: Int,
+    onClick: () -> Unit
+) {
+    val appIcon = remember(app.packageName) {
+        try {
+            val bitmap = NotificationUtils.getAppIconBitmap(context, app.packageName)
+            bitmap?.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    val progress = if (maxCount > 0) app.count.toFloat() / maxCount else 0f
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // App Icon
+            if (appIcon != null) {
+                Image(
+                    bitmap = appIcon,
+                    contentDescription = app.name,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            color = app.color.copy(alpha = 0.3f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = app.name.take(1).uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = app.color
+                    )
+                }
+            }
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = app.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.Gray.copy(alpha = 0.3f), shape = RoundedCornerShape(1.dp))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(4.dp))
+                            .fillMaxWidth(progress)
+                            .background(app.color, shape = RoundedCornerShape(1.dp))
+                    )
+                }
+            }
+        }
+        
+        // Notification count on the right
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = app.count.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "View details",
+                tint = Color.Gray
+            )
+        }
     }
 }
 

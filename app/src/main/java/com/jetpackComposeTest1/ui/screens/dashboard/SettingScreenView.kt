@@ -1,7 +1,5 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,10 +10,13 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,9 +67,9 @@ import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.SettingsViewModel
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
-import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.PasscodeScreenRoute
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
+import com.jetpackComposeTest1.ui.utils.Utils.shareExcelFile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,7 +125,7 @@ fun SettingsScreenView(
     LaunchedEffect(exportState) {
         when (exportState) {
             is SettingsViewModel.ExportState.Success -> {
-                // Share the file
+                // Share the file using common utility function
                 shareExcelFile(context, (exportState as SettingsViewModel.ExportState.Success).fileUri)
                 viewModel.resetExportState()
             }
@@ -149,7 +150,7 @@ fun SettingsScreenView(
                 navigationIcon = {
                     IconButton(onClick = { onNavigateBack.invoke() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = context.getString(R.string.back),
                             tint = Color.White
                         )
@@ -181,7 +182,7 @@ fun SettingsScreenView(
                     item {
                         SectionCard(modifier = Modifier.padding(top = 20.dp), title = "Storage Management") {
                             SettingsSwitchItemContent(
-                                icon = Icons.Filled.Delete,
+                                icon = Icons.Filled.CleaningServices,
                                 title = "Auto Cleanup",
                                 subtitle = {
                                     if (autoCleanup) {
@@ -214,7 +215,7 @@ fun SettingsScreenView(
                     item {
                         SectionCard(modifier = Modifier,title = "Export & Backup") {
                             SettingsNavItem(
-                                icon = Icons.Filled.Info,
+                                icon = Icons.Filled.FileUpload,
                                 title = "Export All Data",
                                 subtitle = "Export all notifications to Excel file",
                                 onClick = {
@@ -245,7 +246,7 @@ fun SettingsScreenView(
                     item {
                         SectionCard(modifier = Modifier, title = "Privacy") {
                             SettingsSwitchItem(
-                                icon = Icons.Filled.Info,
+                                icon = Icons.Filled.Password,
                                 title = "Passcode",
                                 subtitle = "Use passcode to unlock Notisave.",
                                 checked = passcodeEnabled,
@@ -278,7 +279,7 @@ fun SettingsScreenView(
                             )
                             Divider()
                             SettingsNavItem(
-                                icon = Icons.Filled.Info,
+                                icon = Icons.Filled.Policy,
                                 title = "Privacy policy",
                                 subtitle = "How data is stored",
                                 onClick = { showPrivacyPolicyDialog = true }
@@ -396,15 +397,6 @@ fun SettingsScreenView(
 
 }
 
-private fun shareExcelFile(context: Context, uri: android.net.Uri) {
-    val shareIntent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_STREAM, uri)
-        type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-    context.startActivity(Intent.createChooser(shareIntent, "Share Excel File"))
-}
 
 @Composable
 private fun SectionCard(

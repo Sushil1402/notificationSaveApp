@@ -1,16 +1,22 @@
 package com.jetpackComposeTest1.ui.components.charts
 
+import android.util.Log
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jetpackComposeTest1.model.analytics.DayData
@@ -29,31 +35,41 @@ fun WeeklyBarChart(
     showAverage: Boolean = true
 ) {
     if (weeklyTrend.isEmpty()) return
-    
+
     val maxCount = max(weeklyTrend.maxOfOrNull { it.count } ?: 1, 1)
     val average = weeklyTrend.map { it.count }.average()
     val chartHeight = 140.dp
-    
+
+    // Calculate dynamic Y-axis label width
+    val maxValueDigits = maxCount.toString().length
+    val centerValue = (maxCount.toFloat() / 2f).roundToInt()
+    val centerValueDigits = centerValue.toString().length
+    val maxDigits = maxOf(maxValueDigits, centerValueDigits, 1)
+    val calculatedWidth = (maxDigits * 10).dp
+    val yAxisLabelWidth = maxOf(calculatedWidth, 15.dp)
+
     Column(modifier = modifier.padding(2.dp)) {
-        // Chart area with Y-axis labels on the right
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 2.dp),
+            verticalAlignment = Alignment.Bottom
         ) {
-            // Chart area (takes most of the width)
+            // --- Chart Area (Grid + Bars) ---
             Box(
                 modifier = Modifier
                     .height(chartHeight)
-                  
+                    .weight(1f)
             ) {
-                // Draw grid background
+                // --- Grid Background ---
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val gridColor = Color.Gray.copy(alpha = 0.2f)
                     val gridStrokeWidth = 1.dp.toPx()
-                    
-                    // Draw only 3 horizontal grid lines: top, center, bottom
-                    val gridPositions = listOf(0f, 0.5f, 1f) // Top, center, bottom
-                    gridPositions.forEach { position ->
+                    val barCount = weeklyTrend.size
+
+                    // Horizontal lines (top, middle, bottom)
+                    listOf(0f, 0.5f, 1f).forEach { position ->
                         val y = size.height * position
                         drawLine(
                             color = gridColor,
@@ -62,13 +78,19 @@ fun WeeklyBarChart(
                             strokeWidth = gridStrokeWidth
                         )
                     }
-                    
-                    // Draw vertical grid lines at segment boundaries (creating columns for each day)
-                    val barCount = weeklyTrend.size
+
+                    // Left edge line
+                    drawLine(
+                        color = gridColor,
+                        start = Offset(0f, 0f),
+                        end = Offset(0f, size.height),
+                        strokeWidth = gridStrokeWidth
+                    )
+
+                    // Vertical grid lines (including right edge)
                     if (barCount > 0) {
                         val segmentWidth = size.width / barCount
-                        // Draw vertical lines at the boundaries of each segment (including edges)
-                        for (i in 0..barCount) {
+                        for (i in 1..barCount) { // include final edge
                             val x = segmentWidth * i
                             drawLine(
                                 color = gridColor,
@@ -79,13 +101,12 @@ fun WeeklyBarChart(
                         }
                     }
                 }
-                
-                // Draw average line across all bars
+
+                // --- Average Line ---
                 if (showAverage) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         val avgHeight = (average.toFloat() / maxCount) * size.height
                         val y = size.height - avgHeight
-                        
                         drawLine(
                             color = averageLineColor,
                             start = Offset(0f, y),
@@ -95,108 +116,100 @@ fun WeeklyBarChart(
                         )
                     }
                 }
-                
-                // Draw bars
+
+                // --- Bars (Evenly spaced, no outer gaps) ---
                 Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 0.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    weeklyTrend.forEachIndexed { index, dayData ->
-                        val color = if (dayData.isSelected) selectedBarColor else Color(0xFF424242)
-                        
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    val barWidthFraction = 0.7f
+                    weeklyTrend.forEach { dayData ->
+                        val color =
+                            if (dayData.isSelected) selectedBarColor else Color(0xFF424242)
+                        val animatedHeight = remember(dayData.count) { Animatable(0f) }
+
+                        // Animate bar height when value changes
+                        LaunchedEffect(dayData.count) {
+                            animatedHeight.animateTo(dayData.count.toFloat())
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.BottomCenter
                         ) {
                             Canvas(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(chartHeight)
+                                    .fillMaxWidth(barWidthFraction)
+                                    .fillMaxHeight()
                             ) {
-                                val barHeight = if (maxCount > 0) {
-                                    (dayData.count.toFloat() / maxCount) * size.height
-                                } else 0f
-                                
-                                val barWidth = size.width * 0.6f
-                                val x = (size.width - barWidth) / 2
+                                val barHeight = (animatedHeight.value / maxCount) * size.height
                                 val y = size.height - barHeight
-                                
                                 drawRect(
                                     color = color,
-                                    topLeft = Offset(x, y),
-                                    size = Size(barWidth, barHeight)
+                                    topLeft = Offset(0f, y),
+                                    size = Size(size.width, barHeight)
                                 )
                             }
                         }
                     }
                 }
             }
-            
-            // Y-axis labels - positioned to the right of the chart, aligned with evenly spaced grid lines
-            Box(
+
+            // --- Y-Axis Labels ---
+            Column(
                 modifier = Modifier
                     .height(chartHeight)
-                    .width(20.dp)
+                    .width(yAxisLabelWidth),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End
             ) {
-                // Show only 3 Y-axis labels: top (maxCount), center, bottom (0)
-                val centerValue = (maxCount.toFloat() / 2f).roundToInt()
-                val labelValues = listOf(maxCount, centerValue, 0)
-                
-                // Position labels: top, center, bottom
-                labelValues.forEachIndexed { index, labelValue ->
-                    val yPosition = when (index) {
-                        0 -> 0f // Top
-                        1 -> 0.5f // Center
-                        else -> 1f // Bottom
-                    }
-                    val yOffset = (chartHeight.value * yPosition - 7).dp
+                listOf(maxCount, (maxCount / 2), 0).forEach { label ->
                     Text(
-                        text = labelValue.toString(),
+                        text = label.toString(),
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 10.sp,
                         color = Color.Gray,
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .offset(y = yOffset)
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // X-axis labels - align with chart width (excluding Y-axis labels area)
+
+        // --- X-Axis Labels ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start
         ) {
-            Box(modifier = Modifier) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    weeklyTrend.forEachIndexed { index, dayData ->
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = dayData.dayLabel,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 12.sp,
-                                color = Color.Black,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                        }
-                    }
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 0.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                weeklyTrend.forEach { dayData ->
+                    Text(
+                        text = dayData.dayLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 12.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
-            // Spacer for Y-axis labels area
-            Spacer(modifier = Modifier.width(28.dp))
+            Spacer(modifier = Modifier.width(yAxisLabelWidth))
         }
-        
-        // Average label
+
+        // --- Average Label ---
         if (showAverage) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -205,13 +218,17 @@ fun WeeklyBarChart(
                 Text(
                     text = "avg ${average.toInt()}",
                     style = MaterialTheme.typography.labelMedium,
-                    fontSize = 10.sp,
-                    color = main_appColor
+                    fontSize = 8.sp,
+                    color = Color(0xFF1A73E8), // Replace with your main_appColor
+                    modifier = Modifier.padding(end = yAxisLabelWidth + 4.dp)
                 )
             }
         }
     }
 }
+
+
+
 
 @Composable
 fun HourlyBarChart(
@@ -242,7 +259,8 @@ fun HourlyBarChart(
             // Chart area (takes most of the width)
             Box(
                 modifier = Modifier
-                    .height(chartHeight).padding(start = 5.dp)
+                    .height(chartHeight)
+                    .padding(start = 5.dp)
             ) {
                 // Draw grid background
                 Canvas(modifier = Modifier.fillMaxSize()) {

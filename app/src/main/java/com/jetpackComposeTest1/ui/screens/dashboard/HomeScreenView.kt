@@ -213,21 +213,21 @@ fun HomeScreenView(
             }
         }
 
-        if (groupedNotifications.isNotEmpty()) {
-            FloatingActionButton(
-                onClick = { homeScreenVM.refreshNotifications(context) },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp, bottom = 150.dp, top = 0.dp, end = 16.dp),
-                containerColor = main_appColor
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add",
-                    tint = Color.White
-                )
-            }
-        }
+//        if (groupedNotifications.isNotEmpty()) {
+//            FloatingActionButton(
+//                onClick = { homeScreenVM.refreshNotifications(context) },
+//                modifier = Modifier
+//                    .align(Alignment.BottomEnd)
+//                    .padding(16.dp, bottom = 150.dp, top = 0.dp, end = 16.dp),
+//                containerColor = main_appColor
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Add,
+//                    contentDescription = "Add",
+//                    tint = Color.White
+//                )
+//            }
+//        }
     }
 
     if (showPermissionBottomSheet) {
@@ -274,15 +274,6 @@ fun NotificationHeader(
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f)
-            )
-        }
-        IconButton(onClick = {
-            NotificationUtils.showNotification(context, "Hello!", "This is from Jetpack Compose 🚀")
-        }) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "notification Create",
-                tint = Color.White
             )
         }
         Box {

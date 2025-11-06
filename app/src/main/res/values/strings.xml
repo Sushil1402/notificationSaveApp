@@ -38,6 +38,8 @@
     <string name="back">Back</string>
     <string name="all_notifications_cleared">All notifications for this app have been cleared</string>
     <string name="unread_count">%s unread</string>
+    <string name="filter">Filter</string>
+    <string name="export">Export</string>
     
     <!-- All Unread Notifications Screen -->
     <string name="all_unread_notifications">All Unread Notifications</string>

@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
@@ -48,6 +50,7 @@ fun AllUnreadNotificationsScreen(
 ) {
     val context = LocalContext.current
     val notifications by viewModel.notifications.collectAsState()
+    val grouped by viewModel.groupedNotifications.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
@@ -74,7 +77,7 @@ fun AllUnreadNotificationsScreen(
                 navigationIcon = {
                     IconButton(onClick = { onNavigateBack.invoke() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = context.getString(R.string.back),
                             tint = Color.White
                         )
@@ -157,22 +160,14 @@ fun AllUnreadNotificationsScreen(
                             EmptyUnreadNotificationsMessage()
                         }
                     } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(notifications) { notification ->
-                                AllUnreadNotificationItem(
-                                    notification = notification,
-                                    onMarkAsRead = { viewModel.markAsRead(notification.id) },
-                                    onDelete = {
-                                        selectedNotification = notification
-                                        showDeleteDialog = true
-                                    }
-                                )
+                        AllUnreadNotificationsGroupedList(
+                            groups = grouped,
+                            onMarkAsRead = { viewModel.markAsRead(it) },
+                            onDelete = { notification ->
+                                selectedNotification = notification
+                                showDeleteDialog = true
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -237,6 +232,60 @@ fun AllUnreadNotificationsScreen(
                 selectedNotification = null
             }
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AllUnreadNotificationsGroupedList(
+    groups: List<AllUnreadNotificationsViewModel.DateGroup>,
+    onMarkAsRead: (String) -> Unit,
+    onDelete: (NotificationItem) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        groups.forEach { group ->
+            stickyHeader {
+                // Centered rounded date chip
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Transparent)
+                        .padding(top = 8.dp)
+                ) {
+                    Surface(
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+                        color = Color.White,
+                        tonalElevation = 2.dp,
+                        shadowElevation = 2.dp,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                    ) {
+                        Text(
+                            text = group.dateLabel,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+            items(group.items, key = { it.id }) { notification ->
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    AllUnreadNotificationItem(
+                        notification = notification,
+                        onMarkAsRead = { onMarkAsRead(notification.id) },
+                        onDelete = { onDelete(notification) }
+                    )
+                }
+            }
+        }
     }
 }
 

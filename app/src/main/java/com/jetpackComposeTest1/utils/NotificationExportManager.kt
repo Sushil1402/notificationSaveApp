@@ -32,8 +32,14 @@ class NotificationExportManager(private val context: Context) {
      * Export all notifications to Excel file grouped by app
      * Structure: App Name (header) -> App's notifications (rows) -> Next App Name -> etc.
      * Returns the URI of the created file
+     * 
+     * @param notifications List of notifications to export
+     * @param customFileNamePrefix Optional custom prefix for file name (e.g., "Gmail" for "Gmail_notifications_export_...")
      */
-    suspend fun exportToExcel(notifications: List<NotificationEntity>): Result<Uri> = withContext(Dispatchers.IO) {
+    suspend fun exportToExcel(
+        notifications: List<NotificationEntity>,
+        customFileNamePrefix: String? = null
+    ): Result<Uri> = withContext(Dispatchers.IO) {
         try {
             if (notifications.isEmpty()) {
                 return@withContext Result.failure(Exception("No notifications to export"))
@@ -172,7 +178,14 @@ class NotificationExportManager(private val context: Context) {
             sheet.setColumnWidth(9, 3000)  // Priority - 11.7 characters
             
             // Create file in app's external files directory
-            val fileName = "${FILE_NAME_PREFIX}_${fileNameDateFormat.format(Date())}$FILE_EXTENSION"
+            val filePrefix = if (customFileNamePrefix != null) {
+                // Sanitize app name to remove invalid file name characters
+                val sanitizedAppName = customFileNamePrefix.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                "${sanitizedAppName}_${FILE_NAME_PREFIX}"
+            } else {
+                FILE_NAME_PREFIX
+            }
+            val fileName = "${filePrefix}_${fileNameDateFormat.format(Date())}$FILE_EXTENSION"
             val file = File(context.getExternalFilesDir(null), fileName)
             
             // Write workbook to file

@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -31,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.AppSelectionViewModel
 import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.AppInfo
+import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.NotificationUtils.getAppIconBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +103,7 @@ fun AppSelectionScreen(
                 } else {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -156,8 +159,12 @@ fun AppSelectionScreen(
                     checked = isAllAppsEnabled,
                     onCheckedChange = { viewModel.onAllAppsToggleChanged(it) },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                        checkedThumbColor = main_appColor,
+                        checkedTrackColor = main_appColor.copy(alpha = 0.35f),
+                        checkedBorderColor = Color.White,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        uncheckedBorderColor = Color.White
                     )
                 )
             }
@@ -185,7 +192,7 @@ fun AppSelectionScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = main_appColor
                     )
                 ) {
                     Text(
@@ -227,7 +234,7 @@ fun AppSelectionScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator( color = main_appColor)
             }
         } else if (filteredApps.isEmpty() && searchQuery.isNotEmpty()) {
             // No search results
@@ -393,8 +400,12 @@ private fun AppItem(
                 checked = appInfo.isEnabled,
                 onCheckedChange = onToggleChanged,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                    checkedThumbColor = main_appColor,
+                    checkedTrackColor = main_appColor.copy(alpha = 0.35f),
+                    checkedBorderColor = Color.White,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    uncheckedBorderColor = Color.White
                 )
             )
         }
