@@ -2,6 +2,10 @@ package com.jetpackComposeTest1.ui.screens.dashboard
 
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -29,6 +33,7 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -62,6 +67,7 @@ fun NotificationDetailScreen(
     isFromNotification:Boolean,
     selectedDate:Long?,
     onNavigateBack: () -> Unit,
+    onNavigateToDetail: ((String) -> Unit)? = null,
     viewModel: NotificationDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -186,6 +192,14 @@ fun NotificationDetailScreen(
                                 iconTint = main_appColor,
                                 onClick = {
                                     viewModel.exportAppNotifications(context, packageName, appName)
+                                }
+                            ),
+                            MenuOption(
+                                title = context.getString(R.string.app_notification_settings),
+                                icon = Icons.Default.Settings,
+                                iconTint = main_appColor,
+                                onClick = {
+                                    openAppNotificationSettings(context, packageName)
                                 }
                             )
                         ),
@@ -324,6 +338,9 @@ fun NotificationDetailScreen(
                             onDelete = { notif ->
                                 selectedNotification = notif
                                 showDeleteDialog = true
+                            },
+                            onNotificationClick = { notificationId ->
+                                onNavigateToDetail?.invoke(notificationId)
                             }
                         )
                     }
@@ -439,7 +456,8 @@ fun NotificationDetailScreen(
 private fun NotificationsGroupedList(
     groups: List<NotificationDetailViewModel.DateGroup>,
     onMarkAsRead: (String) -> Unit,
-    onDelete: (NotificationItem) -> Unit
+    onDelete: (NotificationItem) -> Unit,
+    onNotificationClick: ((String) -> Unit)? = null
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -480,7 +498,8 @@ private fun NotificationsGroupedList(
                     NotificationDetailItem(
                         notification = notification,
                         onMarkAsRead = { onMarkAsRead(notification.id) },
-                        onDelete = { onDelete(notification) }
+                        onDelete = { onDelete(notification) },
+                        onClick = { onNotificationClick?.invoke(notification.id) }
                     )
                 }
             }
@@ -616,7 +635,8 @@ private fun FilterBottomSheet(
 fun NotificationDetailItem(
     notification: NotificationItem,
     onMarkAsRead: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
@@ -625,8 +645,10 @@ fun NotificationDetailItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                if (!notification.isRead) {
-                    onMarkAsRead()
+                onClick?.invoke() ?: run {
+                    if (!notification.isRead) {
+                        onMarkAsRead()
+                    }
                 }
             },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -775,6 +797,36 @@ fun EmptyNotificationsMessage() {
             color = Color.Gray,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+    }
+}
+
+/**
+ * Opens the notification settings for a specific app
+ */
+private fun openAppNotificationSettings(context: Context, packageName: String) {
+    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // For Android 8.0 (API 26) and above, use ACTION_APP_NOTIFICATION_SETTINGS
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+    } else {
+        // For older versions, open app details settings
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.parse("package:$packageName")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+    }
+    
+    try {
+        ContextCompat.startActivity(context, intent, null)
+    } catch (e: Exception) {
+        // If the specific notification settings can't be opened, fall back to app details
+        val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.parse("package:$packageName")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        ContextCompat.startActivity(context, fallbackIntent, null)
     }
 }
 

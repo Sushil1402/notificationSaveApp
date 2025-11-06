@@ -56,6 +56,11 @@ data class NotificationDetailRoute(
 ): AppNavigationRoute
 
 @Serializable
+data class NotificationDetailViewRoute(
+    val notificationId: String
+): AppNavigationRoute
+
+@Serializable
 object AllUnreadNotificationsRoute: AppNavigationRoute
 
 @Serializable

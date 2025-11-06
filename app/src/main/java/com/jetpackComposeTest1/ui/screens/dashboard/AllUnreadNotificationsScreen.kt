@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,6 +47,7 @@ import com.jetpackComposeTest1.ui.utils.toImageBitmap
 @Composable
 fun AllUnreadNotificationsScreen(
     onNavigateBack:()->Unit,
+    onNavigateToDetail: ((String) -> Unit)? = null,
     viewModel: AllUnreadNotificationsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -166,6 +168,9 @@ fun AllUnreadNotificationsScreen(
                             onDelete = { notification ->
                                 selectedNotification = notification
                                 showDeleteDialog = true
+                            },
+                            onNotificationClick = { notificationId ->
+                                onNavigateToDetail?.invoke(notificationId)
                             }
                         )
                     }
@@ -240,7 +245,8 @@ fun AllUnreadNotificationsScreen(
 private fun AllUnreadNotificationsGroupedList(
     groups: List<AllUnreadNotificationsViewModel.DateGroup>,
     onMarkAsRead: (String) -> Unit,
-    onDelete: (NotificationItem) -> Unit
+    onDelete: (NotificationItem) -> Unit,
+    onNotificationClick: ((String) -> Unit)? = null
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -281,7 +287,8 @@ private fun AllUnreadNotificationsGroupedList(
                     AllUnreadNotificationItem(
                         notification = notification,
                         onMarkAsRead = { onMarkAsRead(notification.id) },
-                        onDelete = { onDelete(notification) }
+                        onDelete = { onDelete(notification) },
+                        onClick = { onNotificationClick?.invoke(notification.id) }
                     )
                 }
             }
@@ -293,7 +300,8 @@ private fun AllUnreadNotificationsGroupedList(
 fun AllUnreadNotificationItem(
     notification: NotificationItem,
     onMarkAsRead: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
@@ -301,7 +309,14 @@ fun AllUnreadNotificationItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable {
+                onClick?.invoke() ?: run {
+                    if (!notification.isRead) {
+                        onMarkAsRead()
+                    }
+                }
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {

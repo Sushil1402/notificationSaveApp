@@ -27,8 +27,16 @@ class NotificationDBRepositoryImpl @Inject constructor(private val notificationD
         return notificationDao.getNotificationsByPackage(packageName)
     }
 
+    override suspend fun getNotificationById(id: Long): NotificationEntity? {
+        return notificationDao.getNotificationById(id)
+    }
+
     override suspend fun markAsRead(id: Long) {
         notificationDao.updateReadStatus(id, true)
+    }
+
+    override suspend fun updateReadStatus(id: Long, isRead: Boolean) {
+        notificationDao.updateReadStatus(id, isRead)
     }
 
     override suspend fun deleteNotification(id: Long) {

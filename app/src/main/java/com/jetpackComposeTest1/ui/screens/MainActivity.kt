@@ -18,6 +18,7 @@ import com.jetpackComposeTest1.ui.navigation.AllUnreadNotificationsRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.DashboardScreenRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
+import com.jetpackComposeTest1.ui.navigation.NotificationDetailViewRoute
 import com.jetpackComposeTest1.ui.navigation.GroupAppSelectionRoute
 import com.jetpackComposeTest1.ui.navigation.GroupAppsRoute
 import com.jetpackComposeTest1.ui.navigation.SettingScreenRoute
@@ -30,6 +31,7 @@ import com.jetpackComposeTest1.ui.screens.appselection.AppSelectionScreen
 import com.jetpackComposeTest1.ui.screens.appselection.DatabaseAppSelectionScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.AllUnreadNotificationsScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailScreen
+import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailViewScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.SettingsScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.PasscodeScreenView
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
@@ -91,6 +93,22 @@ class MainActivity : ComponentActivity() {
                                 selectedDate= args.selectedDate,
                                 onNavigateBack = {
                                     navController.popBackStack()
+                                },
+                                onNavigateToDetail = { notificationId ->
+                                    navController.navigate(NotificationDetailViewRoute(notificationId))
+                                }
+                            )
+                        }
+
+                        composable<NotificationDetailViewRoute> { backStackEntry ->
+                            val args = backStackEntry.toRoute<NotificationDetailViewRoute>()
+                            NotificationDetailViewScreen(
+                                notificationId = args.notificationId,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                },
+                                onNotificationDeleted = {
+                                    navController.popBackStack()
                                 }
                             )
                         }
@@ -122,9 +140,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable<AllUnreadNotificationsRoute> {
-                            AllUnreadNotificationsScreen( onNavigateBack = {
-                                navController.popBackStack()
-                            })
+                            AllUnreadNotificationsScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                },
+                                onNavigateToDetail = { notificationId ->
+                                    navController.navigate(NotificationDetailViewRoute(notificationId))
+                                }
+                            )
                         }
 
                         composable<SettingScreenRoute> {

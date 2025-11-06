@@ -71,6 +71,9 @@ interface NotificationDao {
     @Query("SELECT * FROM notifications WHERE packageName = :packageName ORDER BY timestamp DESC")
     fun getNotificationsByPackage(packageName: String): Flow<List<NotificationEntity>>
 
+    @Query("SELECT * FROM notifications WHERE id = :id")
+    suspend fun getNotificationById(id: Long): NotificationEntity?
+
     @Query("SELECT * FROM notifications WHERE appName LIKE '%' || :appName || '%' ORDER BY timestamp DESC")
     fun searchNotificationsByAppName(appName: String): Flow<List<NotificationEntity>>
 
