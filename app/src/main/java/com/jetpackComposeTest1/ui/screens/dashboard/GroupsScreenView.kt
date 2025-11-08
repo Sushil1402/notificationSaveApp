@@ -107,7 +107,6 @@ fun GroupsScreenView(
                                     GroupAppsRoute(groupId = group.id, groupName = group.name)
                                 )
                             },
-                            onToggleMute = { viewModel.toggleGroupMute(group.id) },
                             onRenameGroup = { 
                                 selectedGroupId = group.id
                                 renameGroupName = group.name
@@ -210,11 +209,14 @@ fun NotificationGroupItem(
     modifier: Modifier,
     group: NotificationGroupData,
     onGroupClick: () -> Unit,
-    onToggleMute: () -> Unit,
     onRenameGroup: () -> Unit,
     onDeleteGroup: () -> Unit
 ) {
-    val groupIds = arrayListOf(context.getString(R.string.group_label_unread),context.getString(R.string.group_label_muted))
+    val groupIds = arrayListOf(
+        context.getString(R.string.group_label_unread),
+        context.getString(R.string.group_label_muted),
+        context.getString(R.string.group_label_all_apps)
+    )
 
     Card(
         modifier = modifier
@@ -288,17 +290,6 @@ fun NotificationGroupItem(
                         )
                     }
                     
-                    // Show mute/unmute toggle for custom groups only
-                    if (group.id !in groupIds) {
-                        IconButton(onClick = onToggleMute) {
-                            Icon(
-                                imageVector = if (group.isMuted) Icons.Default.Notifications else Icons.Default.Notifications,
-                                contentDescription = if (group.isMuted) context.getString(R.string.unmute) else context.getString(R.string.muted),
-                                tint = if (group.isMuted) Color.Red else Color.Gray
-                            )
-                        }
-                    }
-                    
                     // Show three-dot menu for custom groups only
                     if (group.id !in groupIds) {
                         var showDropdownMenu by remember { mutableStateOf(false) }
@@ -369,8 +360,6 @@ fun NotificationGroupItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (group.id == context.getString(R.string.group_label_muted)) {
-                    GroupTypeChip(context.getString(R.string.group_label_muted), Color.Red)
-                } else if (group.id !in groupIds && group.isMuted) {
                     GroupTypeChip(context.getString(R.string.group_label_muted), Color.Red)
                 }
             }

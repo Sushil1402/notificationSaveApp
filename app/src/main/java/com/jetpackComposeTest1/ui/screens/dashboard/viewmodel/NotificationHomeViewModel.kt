@@ -63,7 +63,9 @@ class NotificationHomeViewModel @Inject constructor(
                 // Filter to show only unread notifications in the list
                 val unreadNotifications = allNotifications.filter { !it.isRead }
                 
-                val grouped = unreadNotifications
+                // Group by packageName to ensure only one entry per app
+                // Also store the most recent timestamp for sorting
+                val groupedWithTimestamp = unreadNotifications
                     .groupBy { it.packageName }
                     .map { (packageName, appNotifications) ->
                         // Get the actual app name from package manager
@@ -74,9 +76,12 @@ class NotificationHomeViewModel @Inject constructor(
                             packageName // Fallback to package name if app name can't be retrieved
                         }
                         
-                        NotificationGroup(
+                        // Get the most recent notification timestamp for sorting
+                        val mostRecentTimestamp = appNotifications.maxOfOrNull { it.timestamp } ?: 0L
+                        
+                        val group = NotificationGroup(
                             packageName = packageName,
-                            appName = appName, // This is now the actual app name
+                            appName = appName,
                             appIcon = Utils.getAppIcon(context, packageName),
                             appColor = getAppColor(appName),
                             notificationCount = appNotifications.size,
@@ -93,10 +98,17 @@ class NotificationHomeViewModel @Inject constructor(
                                     )
                                 }
                         )
+                        
+                        // Return pair of group and timestamp for sorting
+                        Pair(group, mostRecentTimestamp)
                     }
-                    .sortedByDescending { it.notificationCount }
+                    // Sort by most recent notification timestamp (newest first)
+                    // This ensures that when a new notification comes from an existing app,
+                    // that app moves to the top of the list
+                    .sortedByDescending { it.second }
+                    .map { it.first } // Extract just the NotificationGroup
 
-                _allGroupedNotifications.value = grouped
+                _allGroupedNotifications.value = groupedWithTimestamp
                 _unreadCount.value = unreadNotifications.size
             }
         }

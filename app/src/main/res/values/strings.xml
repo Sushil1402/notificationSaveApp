@@ -57,6 +57,9 @@
     <string name="open_app">Open App</string>
     <string name="app_not_found">App not found or not installed</string>
     <string name="failed_to_open_app">Failed to open app</string>
+    <string name="image_saved_to_gallery">Image saved to gallery</string>
+    <string name="failed_to_save_image">Failed to save image</string>
+    <string name="failed_to_decode_image">Failed to decode image</string>
     
     <!-- All Unread Notifications Screen -->
     <string name="all_unread_notifications">All Unread Notifications</string>
@@ -70,6 +73,7 @@
     <string name="are_you_sure_delete_group">Are you sure you want to delete "%s"? This action cannot be undone.</string>
     <string name="group_label_muted">muted</string>
     <string name="group_label_unread">unread</string>
+    <string name="group_label_all_apps">all_apps</string>
 
     <string name="muted">Muted</string>
     <string name="unmute">Unmute</string>

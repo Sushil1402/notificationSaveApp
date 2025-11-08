@@ -26,6 +26,14 @@
 
     <!-- Required for data synchronization type foreground services -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    
+    <!-- Required for saving images to gallery (Android 9 and below) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="28" />
+    
+    <!-- Required for saving images to gallery (Android 10+) - MediaStore API doesn't need this, but adding for compatibility -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"

@@ -334,6 +334,34 @@ class GroupAppsViewModel @Inject constructor(
                                 _isLoading.value = false
                             }
                     }
+                    "all_apps" -> {
+                        notificationDao.getAllNotifications()
+                            .collect { notifications ->
+                                val appGroups = notifications.groupBy { it.packageName }
+                                val appsList = appGroups.map { (packageName, appNotifications) ->
+                                    val appInfo = try {
+                                        val appInfo = context.packageManager.getApplicationInfo(packageName, 0)
+                                        context.packageManager.getApplicationLabel(appInfo).toString()
+                                    } catch (e: Exception) {
+                                        packageName
+                                    }
+
+                                    AppWithNotificationCount(
+                                        packageName = packageName,
+                                        appName = appInfo,
+                                        appIcon = try {
+                                            context.packageManager.getApplicationIcon(packageName)
+                                        } catch (e: Exception) {
+                                            context.packageManager.getDefaultActivityIcon()
+                                        },
+                                        notificationCount = appNotifications.size
+                                    )
+                                }.sortedByDescending { it.notificationCount }
+
+                                _allApps.value = appsList
+                                _isLoading.value = false
+                            }
+                    }
                     "read" -> {
                         // Get all apps with read notifications
                         notificationDao.getNotificationsByReadStatus(isRead = true)

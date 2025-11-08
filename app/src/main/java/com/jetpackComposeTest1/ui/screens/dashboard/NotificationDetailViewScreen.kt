@@ -19,10 +19,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +37,9 @@ import com.jetpackComposeTest1.ui.components.MenuOption
 import com.jetpackComposeTest1.ui.components.MoreOptionsMenu
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.NotificationDetailViewViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
+import com.jetpackComposeTest1.ui.utils.NotificationUtils
 import com.jetpackComposeTest1.ui.utils.toImageBitmap
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -276,6 +280,13 @@ private fun NotificationDetailContent(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    
+    // Convert base64 image to ImageBitmap
+    val bigPictureBitmap = remember(notification.largeIcon) {
+        notification.largeIcon?.let { base64String ->
+            NotificationUtils.base64ToBitmap(base64String)?.asImageBitmap()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -359,6 +370,49 @@ private fun NotificationDetailContent(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Big Picture Image Section
+        bigPictureBitmap?.let { imageBitmap ->
+            var showFullImage by remember { mutableStateOf(false) }
+            
+            Text(
+                text = "Image",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showFullImage = true },
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Big picture - Tap to view full size",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Fit
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Full screen image dialog
+            if (showFullImage) {
+                FullScreenImageDialog(
+                    imageBitmap = imageBitmap,
+                    base64String = notification.largeIcon,
+                    onDismiss = { showFullImage = false }
+                )
+            }
+        }
 
         // Message/Content Section
         if (notification.text.isNotEmpty()) {
@@ -512,6 +566,105 @@ private fun MetadataRow(label: String, value: String) {
             fontWeight = FontWeight.Medium,
             color = Color.Black
         )
+    }
+}
+
+@Composable
+private fun FullScreenImageDialog(
+    imageBitmap: androidx.compose.ui.graphics.ImageBitmap,
+    base64String: String?,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isSaving by remember { mutableStateOf(false) }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.95f))
+        ) {
+            // Top bar with Close and Save buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Save button
+                IconButton(
+                    onClick = {
+                        if (base64String != null && !isSaving) {
+                            isSaving = true
+                            scope.launch {
+                                val fileName = "notification_image_${System.currentTimeMillis()}.jpg"
+                                NotificationUtils.saveBase64ImageToGallery(context, base64String, fileName)
+                                isSaving = false
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .background(
+                            Color.White.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        )
+                        .size(48.dp)
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Save image",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                
+                // Close button
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .background(
+                            Color.White.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        )
+                        .size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            
+            // Image centered - clickable to dismiss
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 16.dp, vertical = 80.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Full size image - Tap to close",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 800.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
     }
 }
 

@@ -82,13 +82,6 @@ class NotificationGroupRepository @Inject constructor(
         groupDao.updateGroupName(groupId, name)
     }
     
-    suspend fun toggleGroupMute(groupId: String) {
-        val group = groupDao.getGroupById(groupId)
-        group?.let {
-            groupDao.updateGroupMuteStatus(groupId, !it.isMuted)
-        }
-    }
-    
     suspend fun deleteGroup(groupId: String) {
         // Delete all memberships first (due to foreign key constraints)
         membershipDao.deleteAllMembershipsForGroup(groupId)
