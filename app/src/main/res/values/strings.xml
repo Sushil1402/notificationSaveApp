@@ -4,8 +4,8 @@
 
     <!-- Home Screen -->
     <string name="homeScreenTitle">Notifications</string>
-    <string name="unread_notification_holder">%s unread notifications</string>
-    <string name="view_more_notification_holder">View %s more notifications</string>
+    <string name="unread_notification_holder">%d unread notifications</string>
+    <string name="view_more_notification_holder">View %d more notifications</string>
     <string name="notification_ready">Notifications Ready!</string>
     <string name="permission_required">Permission Required</string>
     <string name="your_notifications_are_bing_saved_automatically">Your notifications are being saved automatically</string>
@@ -13,7 +13,9 @@
     <string name="enable">Enable</string>
     <string name="empty_notification_description">No unread notification</string>
     <string name="empty_notification_small_description">No new notification</string>
-    <string name="notification_count">%s notifications</string>
+    <string name="notification_count">%d notifications</string>
+    <string name="home_all_unread_content_description">Show all unread notifications</string>
+    <string name="home_search_content_description">Search notifications</string>
 
 
 
@@ -38,7 +40,7 @@
     <string name="more_options">More options</string>
     <string name="back">Back</string>
     <string name="all_notifications_cleared">All notifications for this app have been cleared</string>
-    <string name="unread_count">%s unread</string>
+    <string name="unread_count">%d unread</string>
     <string name="filter">Filter</string>
     <string name="export">Export</string>
     <string name="app_notification_settings">App Notification Settings</string>

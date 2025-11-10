@@ -152,7 +152,7 @@ fun NotificationDetailScreen(
                                 Text(
                                     text = context.getString(
                                         R.string.unread_count,
-                                        unreadCount.toString()
+                                        unreadCount
                                     ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color.White.copy(alpha = 0.8f)
