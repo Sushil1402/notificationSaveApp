@@ -114,7 +114,7 @@ fun PasscodeScreenView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -135,7 +135,7 @@ fun PasscodeScreenView(
                     },
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
                     fontSize = 28.sp
                 )
@@ -146,7 +146,7 @@ fun PasscodeScreenView(
                         text = "Please enter your passcode",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         fontSize = 14.sp
                     )
@@ -188,7 +188,7 @@ fun PasscodeScreenView(
                                 )
                                 .border(
                                     width = 2.dp,
-                                    color = if (isFilled) main_appColor else Color.Gray,
+                                    color = if (isFilled) main_appColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                     shape = CircleShape
                                 )
                         )
@@ -294,7 +294,7 @@ private fun NumberButton(
                 containerColor = if (isPressed)
                     main_appColor.copy(alpha = 0.3f)
                 else
-                    Color(0xFFF5F5F5)
+                    MaterialTheme.colorScheme.surfaceVariant
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = if (isPressed) 2.dp else 4.dp
@@ -308,7 +308,7 @@ private fun NumberButton(
                     text = number,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -336,7 +336,7 @@ private fun BackspaceButton(
                 ),
             shape = CircleShape,
             colors = CardDefaults.cardColors(
-                containerColor = if (isPressed) main_appColor.copy(alpha = 0.3f) else Color(0xFFF5F5F5)
+                containerColor = if (isPressed) main_appColor.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surfaceVariant
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = if (isPressed) 2.dp else 4.dp)
         ) {
@@ -347,7 +347,7 @@ private fun BackspaceButton(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Delete",
-                    tint = Color.Black,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(32.dp)
                 )
             }

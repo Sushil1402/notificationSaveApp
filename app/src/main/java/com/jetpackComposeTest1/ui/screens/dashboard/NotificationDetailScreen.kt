@@ -216,12 +216,14 @@ fun NotificationDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // state moved to top scope so TopAppBar can modify it
 
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 // Export Progress Indicator
                 val isExporting = exportState is NotificationDetailViewModel.ExportState.Exporting
@@ -308,7 +310,7 @@ fun NotificationDetailScreen(
                                     "${notifications.size}"
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                             )
                         }
@@ -474,7 +476,7 @@ private fun NotificationsGroupedList(
                 ) {
                     Surface(
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         tonalElevation = 2.dp,
                         shadowElevation = 2.dp,
                         modifier = Modifier
@@ -523,13 +525,14 @@ private fun FilterBottomSheet(
     }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        dragHandle = {}
+        dragHandle = {},
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         // Sheet background
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF3F7FC))
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             // Small top handle line
             Box(
@@ -542,7 +545,10 @@ private fun FilterBottomSheet(
                     modifier = Modifier
                         .width(36.dp)
                         .height(4.dp)
-                        .background(Color(0x33000000), shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
+                        .background(
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp)
+                        )
                 )
             }
             // Header row
@@ -562,7 +568,7 @@ private fun FilterBottomSheet(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = Color.Black,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -576,7 +582,7 @@ private fun FilterBottomSheet(
                 Text(
                     text = "Date",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -585,7 +591,7 @@ private fun FilterBottomSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                        .background(Color(0xFFE0E3E7))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onPickDate() }
                         .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
@@ -597,14 +603,14 @@ private fun FilterBottomSheet(
                             Text(
                                 text = if (currentDateFilter == null) "Select value" else dateText,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = if (currentDateFilter == null) Color(0xFF9EA3AE) else Color.Black,
+                                color = if (currentDateFilter == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1
                             )
                         }
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = null,
-                            tint = Color(0xFF9EA3AE)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -653,7 +659,7 @@ fun NotificationDetailItem(
             },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (notification.isRead) Color.White else Color(0xFFF8F9FA)
+            containerColor = if (notification.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Row(
@@ -685,7 +691,7 @@ fun NotificationDetailItem(
                     text = notification.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = if (notification.isRead) FontWeight.Normal else FontWeight.SemiBold,
-                    color = if (notification.isRead) Color.Gray else Color.Black,
+                    color = if (notification.isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -695,7 +701,7 @@ fun NotificationDetailItem(
                     Text(
                         text = notification.message,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -705,7 +711,7 @@ fun NotificationDetailItem(
                 Text(
                     text = notification.timeAgo,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -718,7 +724,7 @@ fun NotificationDetailItem(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = context.getString(R.string.more_options),
-                        tint = Color.Gray,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -776,7 +782,7 @@ fun EmptyNotificationsMessage() {
         Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = context.getString(R.string.no_notifications_found),
-            tint = Color.Gray,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(64.dp)
         )
 
@@ -785,7 +791,7 @@ fun EmptyNotificationsMessage() {
         Text(
             text = context.getString(R.string.no_notifications_found),
             style = MaterialTheme.typography.headlineSmall,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Medium
         )
 
@@ -794,7 +800,7 @@ fun EmptyNotificationsMessage() {
         Text(
             text = context.getString(R.string.all_notifications_cleared),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }

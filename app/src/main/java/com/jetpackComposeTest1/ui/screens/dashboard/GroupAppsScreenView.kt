@@ -101,7 +101,7 @@ fun GroupAppsScreenView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -131,7 +131,7 @@ fun GroupAppsScreenView(
                             Text(
                                 text = "Found ${apps.size} apps",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                             )
                         }
@@ -161,7 +161,7 @@ fun GroupAppsScreenView(
                                 Text(
                                     text = "No apps found",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.Gray
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -202,7 +202,7 @@ fun AppItem(
             .fillMaxWidth()
             .clickable { onAppClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -231,7 +231,7 @@ fun AppItem(
                 Text(
                     text = app.packageName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             

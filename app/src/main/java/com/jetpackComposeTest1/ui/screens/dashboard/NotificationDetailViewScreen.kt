@@ -195,7 +195,7 @@ fun NotificationDetailViewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             when {
                 isLoading -> {
@@ -224,7 +224,7 @@ fun NotificationDetailViewScreen(
                         Text(
                             text = error ?: "Unknown error",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(24.dp))
@@ -291,6 +291,7 @@ private fun NotificationDetailContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
@@ -299,7 +300,7 @@ private fun NotificationDetailContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF5F5F5)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -333,20 +334,20 @@ private fun NotificationDetailContent(
                         text = notification.appName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = notification.packageName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 // Read/Unread indicator
                 Surface(
                     shape = CircleShape,
-                    color = if (notification.isRead) Color.Gray else main_appColor,
+                    color = if (notification.isRead) MaterialTheme.colorScheme.onSurfaceVariant else main_appColor,
                     modifier = Modifier.size(12.dp)
                 ) {}
             }
@@ -358,7 +359,7 @@ private fun NotificationDetailContent(
         Text(
             text = context.getString(R.string.title),
             style = MaterialTheme.typography.labelLarge,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -366,7 +367,7 @@ private fun NotificationDetailContent(
             text = notification.title,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -378,7 +379,7 @@ private fun NotificationDetailContent(
             Text(
                 text = "Image",
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -389,7 +390,7 @@ private fun NotificationDetailContent(
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
                 Image(
@@ -419,7 +420,7 @@ private fun NotificationDetailContent(
             Text(
                 text = context.getString(R.string.message),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -427,13 +428,13 @@ private fun NotificationDetailContent(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF8F9FA)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Text(
                     text = notification.text,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(16.dp),
                     lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.5
                 )
@@ -446,7 +447,7 @@ private fun NotificationDetailContent(
             Text(
                 text = context.getString(R.string.full_content),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -454,13 +455,13 @@ private fun NotificationDetailContent(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF8F9FA)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Text(
                     text = bigText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(16.dp),
                     lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.5
                 )
@@ -473,14 +474,14 @@ private fun NotificationDetailContent(
             Text(
                 text = context.getString(R.string.sub_text),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = subText,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -491,7 +492,7 @@ private fun NotificationDetailContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF5F5F5)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
             Column(
@@ -503,7 +504,7 @@ private fun NotificationDetailContent(
                     text = context.getString(R.string.details),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -558,13 +559,13 @@ private fun MetadataRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.data.repository.database.NotificationDBRepository
 import com.jetpackComposeTest1.model.setting.SettingsData
+import com.jetpackComposeTest1.model.setting.ThemeMode
 import com.jetpackComposeTest1.utils.CleanupManager
 import com.jetpackComposeTest1.utils.NotificationExportManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,14 +27,14 @@ class SettingsViewModel @Inject constructor(
 
     private val _settings = MutableStateFlow(
         SettingsData(
-        hasNotificationAccess = false,
-        autoCleanup = false,
-        retentionDays = 30,
-        storageUsed = 45.6f,
-        storagePercentage = 65.2f,
-        darkMode = false,
-        notificationSound = true
-    )
+            hasNotificationAccess = false,
+            autoCleanup = false,
+            retentionDays = 30,
+            storageUsed = 45.6f,
+            storagePercentage = 65.2f,
+            themeMode = ThemeMode.SYSTEM,
+            notificationSound = true
+        )
     )
     val settings: StateFlow<SettingsData> = _settings.asStateFlow()
 
@@ -50,7 +51,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _settings.value = _settings.value.copy(
                 autoCleanup = appPreferences.isAutoCleanupEnabled(),
-                retentionDays = appPreferences.getRetentionDays()
+                retentionDays = appPreferences.getRetentionDays(),
+                themeMode = appPreferences.getThemeMode()
             )
         }
     }
@@ -66,10 +68,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             // Save to preferences
             appPreferences.setAutoCleanupEnabled(enabled)
-            
+
             // Update state
             _settings.value = _settings.value.copy(autoCleanup = enabled)
-            
+
             // Manage worker
             if (enabled) {
                 cleanupManager.scheduleCleanup()
@@ -83,10 +85,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             // Save to preferences
             appPreferences.setRetentionDays(days)
-            
+
             // Update state
             _settings.value = _settings.value.copy(retentionDays = days)
-            
+
             // If auto cleanup is enabled, reschedule the worker to use new retention days
             if (_settings.value.autoCleanup) {
                 cleanupManager.scheduleCleanup()
@@ -98,11 +100,10 @@ class SettingsViewModel @Inject constructor(
         // Implement retention period dialog
     }
 
-    fun toggleDarkMode() {
+    fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
-            _settings.value = _settings.value.copy(
-                darkMode = !_settings.value.darkMode
-            )
+            appPreferences.setThemeMode(mode)
+            _settings.value = _settings.value.copy(themeMode = mode)
         }
     }
 
@@ -120,16 +121,16 @@ class SettingsViewModel @Inject constructor(
             try {
                 // Get all notifications from database
                 val allNotifications = notificationDBRepo.getAllNotifications().first()
-                
+
                 if (allNotifications.isEmpty()) {
                     _exportState.value = ExportState.Error("No notifications to export")
                     return@launch
                 }
-                
+
                 // Create export manager and export to Excel
                 val exportManager = NotificationExportManager(context)
                 val result = exportManager.exportToExcel(allNotifications)
-                
+
                 result.fold(
                     onSuccess = { uri ->
                         _exportState.value = ExportState.Success(uri)

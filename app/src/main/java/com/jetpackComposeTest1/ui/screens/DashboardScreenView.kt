@@ -75,7 +75,7 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             ) {
                 NavigationBar(
-                    containerColor = Color.White,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp
                 ) {
                     navigationItems.forEach { item ->
@@ -93,7 +93,7 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
                             icon = { Icon(item.icon, contentDescription = item.title) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = main_appColor,
-                                unselectedIconColor = Color.Gray,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 indicatorColor = Color.Transparent
                             )
                         )
@@ -106,7 +106,7 @@ fun DashboardScreenView(navToScreen:(AppNavigationRoute)->Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(main_appColor)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(
                     start = innerPadding.calculateStartPadding(layoutDirection = androidx.compose.ui.unit.LayoutDirection.Ltr),
                     end = innerPadding.calculateEndPadding(layoutDirection = androidx.compose.ui.unit.LayoutDirection.Ltr),

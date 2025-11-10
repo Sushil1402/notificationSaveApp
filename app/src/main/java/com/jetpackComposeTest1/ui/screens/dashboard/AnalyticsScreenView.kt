@@ -52,6 +52,7 @@ fun AnalyticsScreenView(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyAnalytics by viewModel.dailyAnalytics.collectAsState()
     val weeklyAppBreakdown by viewModel.weeklyAppBreakdown.collectAsState()
+    val canGoNext by viewModel.canGoToNextDay.collectAsState()
 
     val dateFormatter = remember { SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()) }
     val dateString = remember(selectedDate) {
@@ -76,7 +77,7 @@ fun AnalyticsScreenView(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header
             Row(
@@ -101,7 +102,7 @@ fun AnalyticsScreenView(
                 onDateClick = { showDatePicker = true },
                 onTodayClick = { viewModel.selectToday() },
                 showTodayButton = !isToday,
-                canGoNext = viewModel.canGoToNextDay.collectAsState().value
+                canGoNext = canGoNext
             )
 
             // Date Picker Dialog
@@ -138,7 +139,7 @@ fun AnalyticsScreenView(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
@@ -151,7 +152,7 @@ fun AnalyticsScreenView(
                                     weeklyTrend = analytics.weeklyTrend,
                                     barColor = Color(0xFF424242),
                                     selectedBarColor = Color(0xFFEA4335),
-                                    averageLineColor = Color.Gray.copy(alpha = 0.5f)
+                                    averageLineColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                 )
                             }
                         }
@@ -166,7 +167,7 @@ fun AnalyticsScreenView(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
 
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -191,7 +192,7 @@ fun AnalyticsScreenView(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -212,7 +213,7 @@ fun AnalyticsScreenView(
                                         Text(
                                             text = "No notifications for this day",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.Gray
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 } else {
@@ -248,7 +249,7 @@ fun AnalyticsScreenView(
                                 .fillMaxWidth()
                                 .padding(top = 8.dp, bottom = 200.dp, end = 16.dp, start = 16.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
@@ -260,7 +261,7 @@ fun AnalyticsScreenView(
                                 Text(
                                     text = "Top 5 apps this week",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -275,7 +276,7 @@ fun AnalyticsScreenView(
                                         Text(
                                             text = "No notifications for this week",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.Gray
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 } else {
@@ -364,7 +365,7 @@ fun DateSelectorHeader(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onDateClick() },
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Row(
@@ -378,7 +379,7 @@ fun DateSelectorHeader(
                         .clip(CircleShape)
                         .background(
                             if (canGoNext) main_appColor 
-                            else Color.Gray.copy(alpha = 0.3f)
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         )
                         .then(
                             if (canGoNext) {
@@ -392,7 +393,7 @@ fun DateSelectorHeader(
                     Icon(
                         Icons.Default.KeyboardArrowRight,
                         contentDescription = "Next day",
-                        tint = if (canGoNext) Color.White else Color.Gray, // Dark arrow or gray when disabled
+                        tint = if (canGoNext) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -428,17 +429,18 @@ fun HeroStatsSection(
     mostActiveHourRange: String,
     topApp: AppUsageData?
 ) {
-            Card(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Total notifications",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
             Row(
@@ -451,7 +453,8 @@ fun HeroStatsSection(
                         text = totalNotifications.toString(),
                         style = MaterialTheme.typography.displayLarge,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 56.sp
+                        fontSize = 56.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
                     if (changeFromYesterday != 0f) {
@@ -484,12 +487,13 @@ fun HeroStatsSection(
                         text = "Most active;",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = mostActiveHourRange,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -498,7 +502,7 @@ fun HeroStatsSection(
                         text = "Top app:",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     topApp?.let { app ->
                         Column(
@@ -532,7 +536,7 @@ fun HeroStatsSection(
                                 Text(
                                     text = if (app.count == 1) "notification" else "notifications",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
                                 )
                             }
@@ -614,7 +618,10 @@ fun AppBreakdownRow(
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color.Gray.copy(alpha = 0.3f), shape = RoundedCornerShape(1.dp))
+                        .background(
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(1.dp)
+                        )
                 ) {
                     Box(
                         modifier = Modifier
@@ -709,7 +716,10 @@ fun AppBreakdownRow(
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color.Gray.copy(alpha = 0.3f), shape = RoundedCornerShape(1.dp))
+                        .background(
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(1.dp)
+                        )
                 ) {
                     Box(
                         modifier = Modifier
@@ -735,7 +745,7 @@ fun AppBreakdownRow(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = "View details",
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -867,7 +877,10 @@ fun WeeklyAppBreakdownRow(
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color.Gray.copy(alpha = 0.3f), shape = RoundedCornerShape(1.dp))
+                        .background(
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(1.dp)
+                        )
                 ) {
                     Box(
                         modifier = Modifier
@@ -893,7 +906,7 @@ fun WeeklyAppBreakdownRow(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = "View details",
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

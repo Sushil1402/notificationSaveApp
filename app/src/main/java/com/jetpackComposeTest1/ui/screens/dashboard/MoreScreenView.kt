@@ -27,6 +27,8 @@ import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.PermissionChecker
 import androidx.compose.runtime.*
+import com.jetpackComposeTest1.data.local.preferences.AppPreferences
+import com.jetpackComposeTest1.model.setting.ThemeMode
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,10 +37,13 @@ fun MoreScreenView(
     navToScreen: (AppNavigationRoute) -> Unit
 ) {
     val context = LocalContext.current
+    val appPreferences = remember { AppPreferences(context) }
     var hasNotificationAccess by remember { 
         mutableStateOf(PermissionChecker.isNotificationListenerPermissionGranted(context)) 
     }
-    var darkModeEnabled by remember { mutableStateOf(false) }
+    val themeModeFlow = remember { appPreferences.themeModeFlow() }
+    val themeMode by themeModeFlow.collectAsState(initial = appPreferences.getThemeMode())
+    val darkModeEnabled = themeMode == ThemeMode.DARK
     var notificationSound by remember { mutableStateOf(true) }
     
     // Re-check notification access when screen is composed
@@ -54,7 +59,7 @@ fun MoreScreenView(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header
             Row(
@@ -85,17 +90,20 @@ fun MoreScreenView(
                     }
                 }
 
-                item {
-                    SectionCard(modifier = Modifier, title = "App Preferences") {
-                        MoreSwitchItem(
-                            icon = Icons.Filled.DarkMode,
-                            title = "Dark Mode",
-                            subtitle = "Switch to dark theme",
-                            checked = darkModeEnabled,
-                            onCheckedChange = { darkModeEnabled = it }
-                        )
-                    }
-                }
+//                item {
+//                    SectionCard(modifier = Modifier, title = "App Preferences") {
+//                        MoreSwitchItem(
+//                            icon = Icons.Filled.DarkMode,
+//                            title = "Dark Mode",
+//                            subtitle = if (darkModeEnabled) "Dark mode is on" else "Switch to dark theme",
+//                            checked = darkModeEnabled,
+//                            onCheckedChange = { enabled ->
+//                                val target = if (enabled) ThemeMode.DARK else ThemeMode.LIGHT
+//                                appPreferences.setThemeMode(target)
+//                            }
+//                        )
+//                    }
+//                }
 
                 item {
                     SectionCard(modifier = Modifier, title = "Options") {
@@ -145,7 +153,11 @@ private fun SectionCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
@@ -155,7 +167,7 @@ private fun SectionCard(
         )
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             shape = RoundedCornerShape(16.dp),
@@ -176,10 +188,10 @@ private fun MoreNavItem(
     onClick: () -> Unit
 ) {
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = Color.White),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.clickable(role = Role.Button) { onClick() },
         leadingContent = {
-            Icon(icon, contentDescription = null, tint = Color.Black)
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         },
         headlineContent = { Text(title) },
         supportingContent = { Text(subtitle) },
@@ -196,12 +208,12 @@ private fun MoreNotificationAccessItem(
 ) {
     ListItem(
         modifier = Modifier.clickable(role = Role.Button) { onClick() },
-        colors = ListItemDefaults.colors(containerColor = Color.White),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         leadingContent = {
             Icon(
                 imageVector = Icons.Filled.Notifications,
                 contentDescription = "Notification access",
-                tint = Color.Black
+                tint = MaterialTheme.colorScheme.onSurface
             )
         },
         headlineContent = { Text("Notification Access") },
@@ -231,9 +243,9 @@ private fun MoreSwitchItem(
     onCheckedChange: (Boolean) -> Unit
 ) {
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = Color.White),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         leadingContent = {
-            Icon(icon, contentDescription = null, tint = Color.Black)
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         },
         headlineContent = { Text(title) },
         supportingContent = { Text(subtitle) },
@@ -244,10 +256,10 @@ private fun MoreSwitchItem(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = main_appColor,
                     checkedTrackColor = main_appColor.copy(alpha = 0.35f),
-                    checkedBorderColor = Color.White,
+                    checkedBorderColor = Color.Transparent,
                     uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    uncheckedBorderColor = Color.White
+                    uncheckedBorderColor = Color.Transparent
                 )
             )
         }

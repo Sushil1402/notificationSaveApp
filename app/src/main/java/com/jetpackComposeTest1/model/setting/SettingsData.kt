@@ -6,6 +6,6 @@ data class SettingsData(
     val retentionDays: Int,
     val storageUsed: Float,
     val storagePercentage: Float,
-    val darkMode: Boolean,
+    val themeMode: ThemeMode,
     val notificationSound: Boolean
 )

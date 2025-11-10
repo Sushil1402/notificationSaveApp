@@ -6,8 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -16,12 +17,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.ui.navigation.AllUnreadNotificationsRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.DashboardScreenRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailViewRoute
+import com.jetpackComposeTest1.data.local.preferences.AppPreferences
+import com.jetpackComposeTest1.model.setting.ThemeMode
 import com.jetpackComposeTest1.ui.navigation.GroupAppSelectionRoute
 import com.jetpackComposeTest1.ui.navigation.GroupAppsRoute
 import com.jetpackComposeTest1.ui.navigation.SettingScreenRoute
@@ -78,7 +80,16 @@ class MainActivity : ComponentActivity() {
                 DashboardScreenRoute
             }
 
-            JetpackComposeTest1Theme {
+            val themeModeFlow = remember { appPreferences.themeModeFlow() }
+            val themeMode by themeModeFlow.collectAsState(initial = appPreferences.getThemeMode())
+            val isSystemDark = isSystemInDarkTheme()
+            val useDarkTheme = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemDark
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+            }
+
+            JetpackComposeTest1Theme(darkTheme = useDarkTheme) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     NavHost(
                         navController = navController,

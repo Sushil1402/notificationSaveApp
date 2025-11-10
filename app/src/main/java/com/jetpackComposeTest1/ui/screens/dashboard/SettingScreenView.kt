@@ -14,9 +14,12 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +37,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -70,6 +76,7 @@ import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.PasscodeScreenRoute
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.ui.utils.Utils.shareExcelFile
+import com.jetpackComposeTest1.model.setting.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +95,7 @@ fun SettingsScreenView(
             retentionDays = 30,
             storageUsed = 0f,
             storagePercentage = 0f,
-            darkMode = false,
+            themeMode = ThemeMode.SYSTEM,
             notificationSound = true
         )
     }
@@ -100,6 +107,7 @@ fun SettingsScreenView(
     val retentionDays = settings.retentionDays
     val storageUsedMb = 45.6f
     val storagePercent = 65.2f
+    val themeMode = settings.themeMode
     
     // Load passcode state
     val appPreferences = remember { AppPreferences(context) }
@@ -172,7 +180,7 @@ fun SettingsScreenView(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 LazyColumn(
                     modifier = Modifier
@@ -188,7 +196,7 @@ fun SettingsScreenView(
                                     if (autoCleanup) {
                                         val annotatedText = buildAnnotatedString {
                                             append("Delete notifications older than ")
-                                            withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else Color.Black)) {
+                                            withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurface)) {
                                                 append("$retentionDays days")
                                             }
                                         }
@@ -208,6 +216,15 @@ fun SettingsScreenView(
                                         viewModel.setAutoCleanupEnabled(newValue)
                                     }
                                 }
+                            )
+                        }
+                    }
+
+                    item {
+                        SectionCard(modifier = Modifier, title = "Appearance") {
+                            ThemeModeSelector(
+                                selectedMode = themeMode,
+                                onModeSelected = viewModel::setThemeMode
                             )
                         }
                     }
@@ -404,7 +421,11 @@ private fun SectionCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
@@ -414,7 +435,7 @@ private fun SectionCard(
         )
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = Color.White // pure white
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             shape = RoundedCornerShape(16.dp),
@@ -453,9 +474,9 @@ private fun SettingsSwitchItemContent(
     onCheckedChange: (Boolean) -> Unit
 ) {
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = Color.White),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         leadingContent = {
-            Icon(icon, contentDescription = null, tint = Color.Black)
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         },
         headlineContent = { Text(title) },
         supportingContent = subtitle,
@@ -466,10 +487,10 @@ private fun SettingsSwitchItemContent(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = main_appColor,
                     checkedTrackColor = main_appColor.copy(alpha = 0.35f),
-                    checkedBorderColor = Color.White,
+                    checkedBorderColor = Color.Transparent,
                     uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    uncheckedBorderColor = Color.White
+                    uncheckedBorderColor = Color.Transparent
                 )
             )
         }
@@ -486,10 +507,10 @@ private fun SettingsNavItem(
     trailingContent: @Composable (() -> Unit)? = null
 ) {
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = Color.White),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.clickable(role = Role.Button) { onClick() },
         leadingContent = {
-            Icon(icon, contentDescription = null,  tint = Color.Black)
+            Icon(icon, contentDescription = null,  tint = MaterialTheme.colorScheme.onSurface)
         },
         headlineContent = { Text(title) },
         supportingContent = { Text(subtitle) },
@@ -512,7 +533,7 @@ private fun SettingsActionItem(
     onClick: () -> Unit
 ) {
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = Color.White),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.clickable(role = Role.Button) { onClick() },
         leadingContent = {
             Icon(icon, contentDescription = null, tint = Color(0xFFDC2626))
@@ -537,7 +558,7 @@ private fun RetentionPeriodBottomSheet(
     
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -555,7 +576,7 @@ private fun RetentionPeriodBottomSheet(
             Text(
                 text = "Choose how long to keep notifications",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF666666),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
             
@@ -575,7 +596,7 @@ private fun RetentionPeriodBottomSheet(
                             .fillMaxWidth()
                             .padding(16.dp)
                             .background(
-                                color = if (isSelected) main_appColor.copy(alpha = 0.08f) else Color(0xFFF5F5F5),
+                                color = if (isSelected) main_appColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .padding(vertical = 18.dp, horizontal = 16.dp),
@@ -592,12 +613,16 @@ private fun RetentionPeriodBottomSheet(
                                     text = "$days",
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected && isRecommended) Color(0xFF16A34A) else if (isSelected) main_appColor else Color.Black
+                                    color = when {
+                                        isSelected && isRecommended -> Color(0xFF16A34A)
+                                        isSelected -> main_appColor
+                                        else -> MaterialTheme.colorScheme.onSurface
+                                    }
                                 )
                                 Text(
                                     text = "Days",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = Color(0xFF666666)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -631,6 +656,57 @@ private fun RetentionPeriodBottomSheet(
                     "Enable Auto Cleanup",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemeModeSelector(
+    selectedMode: ThemeMode,
+    onModeSelected: (ThemeMode) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Theme",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Choose how the app appearance adapts across light, dark, and system default modes.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        SingleChoiceSegmentedButtonRow {
+            val options = listOf(
+                ThemeMode.SYSTEM to Pair(Icons.Filled.Settings, "System"),
+                ThemeMode.LIGHT to Pair(Icons.Filled.LightMode, "Light"),
+                ThemeMode.DARK to Pair(Icons.Filled.DarkMode, "Dark"),
+            )
+            options.forEachIndexed { index, option ->
+                val (mode, iconAndLabel) = option
+                val (icon, label) = iconAndLabel
+                SegmentedButton(
+                    selected = selectedMode == mode,
+                    onClick = { onModeSelected(mode) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = options.size
+                    ),
+                    icon = {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label
+                        )
+                    },
+                    label = { Text(label) }
                 )
             }
         }
@@ -680,7 +756,7 @@ private fun ClearAllDataConfirmationDialog(
             ) {
                 Text(
                     text = "This will permanently delete all saved notifications. This action cannot be undone.",
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -688,7 +764,7 @@ private fun ClearAllDataConfirmationDialog(
                 Text(
                     text = "To confirm, please type \"$requiredText\" in the field below:",
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 OutlinedTextField(
@@ -700,8 +776,8 @@ private fun ClearAllDataConfirmationDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (isConfirmEnabled) Color(0xFF16A34A) else Color(0xFFDC2626),
-                        unfocusedBorderColor = if (isConfirmEnabled) Color(0xFF16A34A) else Color.Gray,
-                        focusedLabelColor = if (isConfirmEnabled) Color(0xFF16A34A) else Color.Gray
+                        unfocusedBorderColor = if (isConfirmEnabled) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedLabelColor = if (isConfirmEnabled) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
@@ -729,8 +805,8 @@ private fun ClearAllDataConfirmationDialog(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDC2626),
                     contentColor = Color.White,
-                    disabledContainerColor = Color.Gray,
-                    disabledContentColor = Color.White.copy(alpha = 0.6f)
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             ) {
                 Text("Delete All Data")

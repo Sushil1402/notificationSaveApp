@@ -58,7 +58,7 @@ fun GroupsScreenView(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         )
         {
             // Header
@@ -223,7 +223,7 @@ fun NotificationGroupItem(
             .fillMaxWidth()
             .clickable { onGroupClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -274,7 +274,7 @@ fun NotificationGroupItem(
                         Text(
                             text = group.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -299,7 +299,7 @@ fun NotificationGroupItem(
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
                                     contentDescription = "More options",
-                                    tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             
@@ -384,7 +384,7 @@ fun GroupStatItem(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
@@ -27,12 +28,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.ui.utils.toImageBitmap
@@ -93,52 +97,69 @@ fun HomeScreenView(
     val searchQuery by homeScreenVM.searchQuery.collectAsState()
     val isSearchActive by homeScreenVM.isSearchActive.collectAsState()
 
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            window.statusBarColor = main_appColor.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        }
+    }
+
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = main_appColor)
+            .background(color = MaterialTheme.colorScheme.background)
     ) {
         Column {
-            // Header Section
-            NotificationHeader(
-                navToScreen,
-                context,
-                unreadCount = unreadCount,
-                onSearchClick = { homeScreenVM.toggleSearch() }
-            )
-
-            // Search Bar
-            AnimatedVisibility(
-                visible = isSearchActive,
-                enter = slideInVertically(
-                    initialOffsetY = { -it },
-                    animationSpec = tween(durationMillis = 300)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300)),
-                exit = slideOutVertically(
-                    targetOffsetY = { -it },
-                    animationSpec = tween(durationMillis = 300)
-                ) + fadeOut(animationSpec = tween(durationMillis = 300))
+            Surface(
+                color = main_appColor,
+                contentColor = Color.White,
+                tonalElevation = 0.dp
             ) {
                 Column {
-                    SearchToolBar(
-                        context = context,
-                        searchQuery = searchQuery,
-                        onSearchQueryChange = { homeScreenVM.updateSearchQuery(it) },
-                        onClearSearch = { homeScreenVM.clearSearch() }
+                    // Header Section
+                    NotificationHeader(
+                        navToScreen,
+                        context,
+                        unreadCount = unreadCount,
+                        onSearchClick = { homeScreenVM.toggleSearch() }
                     )
 
-                    // Search results count
-                    if (searchQuery.isNotEmpty()) {
-                        Text(
-                            text = context.getString(
-                                R.string.found_search_notification,
-                                "${groupedNotifications.sumOf { it.notificationCount }}"
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                        )
+                    // Search Bar
+                    AnimatedVisibility(
+                        visible = isSearchActive,
+                        enter = slideInVertically(
+                            initialOffsetY = { -it },
+                            animationSpec = tween(durationMillis = 300)
+                        ) + fadeIn(animationSpec = tween(durationMillis = 300)),
+                        exit = slideOutVertically(
+                            targetOffsetY = { -it },
+                            animationSpec = tween(durationMillis = 300)
+                        ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                    ) {
+                        Column {
+                            SearchToolBar(
+                                context = context,
+                                searchQuery = searchQuery,
+                                onSearchQueryChange = { homeScreenVM.updateSearchQuery(it) },
+                                onClearSearch = { homeScreenVM.clearSearch() }
+                            )
+
+                            // Search results count
+                            if (searchQuery.isNotEmpty()) {
+                                Text(
+                                    text = context.getString(
+                                        R.string.found_search_notification,
+                                        "${groupedNotifications.sumOf { it.notificationCount }}"
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -161,73 +182,49 @@ fun HomeScreenView(
             }
 
 
-            // Main Content Area
-            Card(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    if (groupedNotifications.isEmpty()) {
-                        // Empty state
-                        if (isSearchActive && searchQuery.isNotEmpty()) {
-                            SearchEmptyStateMessage(context)
-                        } else {
-                            EmptyStateMessage(context)
-                        }
+                if (groupedNotifications.isEmpty()) {
+                    // Empty state
+                    if (isSearchActive && searchQuery.isNotEmpty()) {
+                        SearchEmptyStateMessage(context)
                     } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            itemsIndexed(groupedNotifications) { index, group ->
+                        EmptyStateMessage(context)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        itemsIndexed(groupedNotifications) { index, group ->
 
-                                NotificationGroupCard(
-                                    context,
-                                    group = group,
-                                    onGroupClick = {
-                                        // Navigate to notification detail screen
-                                        navToScreen.invoke(
-                                            NotificationDetailRoute(
-                                                packageName = group.packageName,
-                                                appName = group.appName,
-                                                isFromNotification = true,
+                            NotificationGroupCard(
+                                context,
+                                group = group,
+                                onGroupClick = {
+                                    // Navigate to notification detail screen
+                                    navToScreen.invoke(
+                                        NotificationDetailRoute(
+                                            packageName = group.packageName,
+                                            appName = group.appName,
+                                            isFromNotification = true,
 
                                             )
-                                        )
-                                    },
-                                    onNotificationClick = { /* Open notification details */ },
-                                    modifier = if (index == groupedNotifications.size - 1) Modifier.padding(
-                                        bottom = 200.dp
-                                    ) else Modifier
-                                )
-                            }
+                                    )
+                                },
+                                onNotificationClick = { /* Open notification details */ },
+                                modifier = if (index == groupedNotifications.size - 1) Modifier.padding(
+                                    bottom = 200.dp
+                                ) else Modifier
+                            )
                         }
                     }
                 }
             }
         }
-
-//        if (groupedNotifications.isNotEmpty()) {
-//            FloatingActionButton(
-//                onClick = { homeScreenVM.refreshNotifications(context) },
-//                modifier = Modifier
-//                    .align(Alignment.BottomEnd)
-//                    .padding(16.dp, bottom = 150.dp, top = 0.dp, end = 16.dp),
-//                containerColor = main_appColor
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.Add,
-//                    contentDescription = "Add",
-//                    tint = Color.White
-//                )
-//            }
-//        }
     }
 
     if (showPermissionBottomSheet) {
@@ -319,7 +316,7 @@ fun NotificationGroupCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         onClick = onGroupClick
     ) {
         Column(
@@ -361,7 +358,7 @@ fun NotificationGroupCard(
                         "${group.notificationCount}"
                     ),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -431,13 +428,13 @@ fun NotificationItemRow(
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (notification.isRead) FontWeight.Normal else FontWeight.Medium,
                 maxLines = 1,
-                color = if (notification.isRead) Color.Gray else Color.Black
+                color = if (notification.isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
             )
             if (notification.message.isNotEmpty()) {
                 Text(
                     text = notification.message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
             }
@@ -447,7 +444,7 @@ fun NotificationItemRow(
         Text(
             text = notification.timeAgo,
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -539,7 +536,7 @@ fun EmptyStateMessage(context: Context) {
         Text(
             text = context.getString(R.string.empty_notification_description),
             style = MaterialTheme.typography.headlineSmall,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Medium
         )
 
@@ -548,7 +545,7 @@ fun EmptyStateMessage(context: Context) {
         Text(
             text = context.getString(R.string.empty_notification_small_description),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }

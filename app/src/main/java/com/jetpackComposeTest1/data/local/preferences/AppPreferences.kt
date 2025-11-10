@@ -2,9 +2,13 @@ package com.jetpackComposeTest1.data.local.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.jetpackComposeTest1.model.setting.ThemeMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 @Singleton
 class AppPreferences @Inject constructor(
@@ -24,6 +28,7 @@ class AppPreferences @Inject constructor(
         private const val KEY_PASSCODE_ENABLED = "passcode_enabled"
         private const val KEY_PASSCODE = "passcode"
         private const val KEY_PASSCODE_DISABLE_INTENT = "passcode_disable_intent"
+        private const val KEY_THEME_MODE = "theme_mode"
     }
 
     fun isAppSelectionCompleted(): Boolean {
@@ -96,5 +101,25 @@ class AppPreferences @Inject constructor(
 
     fun getPasscodeDisableIntent(): Boolean {
         return prefs.getBoolean(KEY_PASSCODE_DISABLE_INTENT, false)
+    }
+
+    fun getThemeMode(): ThemeMode {
+        val stored = prefs.getString(KEY_THEME_MODE, null) ?: return ThemeMode.SYSTEM
+        return runCatching { ThemeMode.valueOf(stored) }.getOrDefault(ThemeMode.SYSTEM)
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        prefs.edit().putString(KEY_THEME_MODE, mode.name).apply()
+    }
+
+    fun themeModeFlow(): Flow<ThemeMode> = callbackFlow {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_THEME_MODE) {
+                trySend(getThemeMode()).isSuccess
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        trySend(getThemeMode())
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 }
