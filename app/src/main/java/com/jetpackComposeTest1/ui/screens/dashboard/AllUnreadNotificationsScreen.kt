@@ -240,7 +240,6 @@ fun AllUnreadNotificationsScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AllUnreadNotificationsGroupedList(
     groups: List<AllUnreadNotificationsViewModel.DateGroup>,

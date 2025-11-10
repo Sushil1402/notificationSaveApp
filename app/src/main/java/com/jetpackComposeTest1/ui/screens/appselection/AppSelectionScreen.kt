@@ -1,5 +1,6 @@
 package com.jetpackComposeTest1.ui.screens.appselection
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.AppSelectionViewModel
 import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.AppInfo
 import com.jetpackComposeTest1.ui.theme.main_appColor
@@ -43,14 +45,15 @@ fun AppSelectionScreen(
     onNavigateToDashboard: () -> Unit,
     viewModel: AppSelectionViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isAllAppsEnabled by viewModel.isAllAppsEnabled.collectAsStateWithLifecycle()
-    
+
     var isSearchVisible by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
-    
+
     val filteredApps = remember(apps, searchQuery) {
         viewModel.getFilteredApps()
     }
@@ -68,7 +71,7 @@ fun AppSelectionScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        placeholder = { Text("Search apps...") },
+                        placeholder = { Text(context.getString(R.string.search_apps)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -82,7 +85,7 @@ fun AppSelectionScreen(
                     )
                 } else {
                     Text(
-                        text = "Save notifications",
+                        text = context.getString(R.string.save_notifications),
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
@@ -90,7 +93,7 @@ fun AppSelectionScreen(
             },
             navigationIcon = {
                 if (isSearchVisible) {
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         isSearchVisible = false
                         viewModel.onSearchQueryChanged("")
                         keyboardController?.hide()
@@ -126,7 +129,10 @@ fun AppSelectionScreen(
 
         // Description text
         Text(
-            text = "Notifications from selected apps will be saved on Notisave.",
+            text = context.getString(
+                R.string.notifications_from_selected_app_will_save_app,
+                "${context.getString(R.string.app_name)}"
+            ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(16.dp)
@@ -150,11 +156,11 @@ fun AppSelectionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "All apps",
+                    text = context.getString(R.string.all_apps),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium
                 )
-                
+
                 Switch(
                     checked = isAllAppsEnabled,
                     onCheckedChange = { viewModel.onAllAppsToggleChanged(it) },
@@ -202,7 +208,7 @@ fun AppSelectionScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -224,7 +230,7 @@ fun AppSelectionScreen(
                     modifier = Modifier.padding(12.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -234,7 +240,7 @@ fun AppSelectionScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator( color = main_appColor)
+                CircularProgressIndicator(color = main_appColor)
             }
         } else if (filteredApps.isEmpty() && searchQuery.isNotEmpty()) {
             // No search results
@@ -254,12 +260,12 @@ fun AppSelectionScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No apps found",
+                        text = context.getString(R.string.no_apps_found),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Try a different search term",
+                        text = context.getString(R.string.try_a_different_search_term),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -274,8 +280,9 @@ fun AppSelectionScreen(
                 items(filteredApps.size) { index ->
                     val appInfo = filteredApps[index]
                     val isLastItem = index == filteredApps.size - 1
-                    
+
                     AppItem(
+                        context = context,
                         appInfo = appInfo,
                         onToggleChanged = { isEnabled ->
                             viewModel.onAppToggleChanged(appInfo.packageName, isEnabled)
@@ -302,6 +309,7 @@ fun AppSelectionScreen(
 
 @Composable
 private fun AppItem(
+    context: Context,
     appInfo: AppInfo,
     onToggleChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -354,7 +362,7 @@ private fun AppItem(
                     } else {
                         // Placeholder icon
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                            imageVector = Icons.Default.Search,
                             contentDescription = appInfo.appName,
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -375,7 +383,7 @@ private fun AppItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    
+
                     Text(
                         text = appInfo.packageName,
                         style = MaterialTheme.typography.bodySmall,
@@ -383,10 +391,10 @@ private fun AppItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    
+
                     if (appInfo.isSystemApp) {
                         Text(
-                            text = "System App",
+                            text = context.getString(R.string.system_app),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 10.sp

@@ -1,5 +1,6 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,24 +28,17 @@ import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.PermissionChecker
 import androidx.compose.runtime.*
-import com.jetpackComposeTest1.data.local.preferences.AppPreferences
-import com.jetpackComposeTest1.model.setting.ThemeMode
+import com.jetpackComposeTest1.R
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreScreenView(
     navToScreen: (AppNavigationRoute) -> Unit
 ) {
     val context = LocalContext.current
-    val appPreferences = remember { AppPreferences(context) }
     var hasNotificationAccess by remember { 
         mutableStateOf(PermissionChecker.isNotificationListenerPermissionGranted(context)) 
     }
-    val themeModeFlow = remember { appPreferences.themeModeFlow() }
-    val themeMode by themeModeFlow.collectAsState(initial = appPreferences.getThemeMode())
-    val darkModeEnabled = themeMode == ThemeMode.DARK
-    var notificationSound by remember { mutableStateOf(true) }
+
     
     // Re-check notification access when screen is composed
     LaunchedEffect(Unit) {
@@ -70,7 +64,7 @@ fun MoreScreenView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "More",
+                    text = context.getString(R.string.more),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -82,49 +76,36 @@ fun MoreScreenView(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    SectionCard(modifier = Modifier.padding(top = 20.dp), title = "Notification Access") {
+                    SectionCard(modifier = Modifier.padding(top = 20.dp), title = context.getString(R.string.notification_access)) {
                         MoreNotificationAccessItem(
+                            context=context,
                             hasNotificationAccess = hasNotificationAccess,
                             onClick = { navToScreen(AppSelectionScreenRoute) }
                         )
                     }
                 }
 
-//                item {
-//                    SectionCard(modifier = Modifier, title = "App Preferences") {
-//                        MoreSwitchItem(
-//                            icon = Icons.Filled.DarkMode,
-//                            title = "Dark Mode",
-//                            subtitle = if (darkModeEnabled) "Dark mode is on" else "Switch to dark theme",
-//                            checked = darkModeEnabled,
-//                            onCheckedChange = { enabled ->
-//                                val target = if (enabled) ThemeMode.DARK else ThemeMode.LIGHT
-//                                appPreferences.setThemeMode(target)
-//                            }
-//                        )
-//                    }
-//                }
 
                 item {
-                    SectionCard(modifier = Modifier, title = "Options") {
+                    SectionCard(modifier = Modifier, title = context.getString(R.string.options)) {
                         MoreNavItem(
                             icon = Icons.Filled.Settings,
-                            title = "Settings",
-                            subtitle = "App settings and preferences",
+                            title = context.getString(R.string.settings),
+                            subtitle = context.getString(R.string.app_settings_subtitle),
                             onClick = { navToScreen(SettingScreenRoute) }
                         )
-                        Divider()
+                        HorizontalDivider()
                         MoreNavItem(
                             icon = Icons.Filled.Info,
-                            title = "About",
-                            subtitle = "App information and version",
+                            title = context.getString(R.string.about),
+                            subtitle = context.getString(R.string.about_subtitle),
                             onClick = { /* Navigate to About */ }
                         )
-                        Divider()
+                        HorizontalDivider()
                         MoreNavItem(
                             icon = Icons.Filled.SupportAgent,
-                            title = "Help & Support",
-                            subtitle = "Get help and contact support",
+                            title = context.getString(R.string.help_and_support),
+                            subtitle = context.getString(R.string.help_and_support_subtitle),
                             onClick = { /* Navigate to Help */ }
                         )
                     }
@@ -133,11 +114,11 @@ fun MoreScreenView(
 
 
                 item {
-                    SectionCard(modifier = Modifier.padding(bottom = 200.dp), title = "Share") {
+                    SectionCard(modifier = Modifier.padding(bottom = 200.dp), title = context.getString(R.string.share)) {
                         MoreNavItem(
                             icon = Icons.Filled.Share,
-                            title = "Share App",
-                            subtitle = "Share this app with friends",
+                            title = context.getString(R.string.share_app),
+                            subtitle = context.getString(R.string.share_subtitle),
                             onClick = { /* Share app */ }
                         )
                     }
@@ -203,6 +184,7 @@ private fun MoreNavItem(
 
 @Composable
 private fun MoreNotificationAccessItem(
+    context: Context,
     hasNotificationAccess: Boolean,
     onClick: () -> Unit
 ) {
@@ -216,8 +198,8 @@ private fun MoreNotificationAccessItem(
                 tint = MaterialTheme.colorScheme.onSurface
             )
         },
-        headlineContent = { Text("Notification Access") },
-        supportingContent = { Text("Allow app to read notifications") },
+        headlineContent = { Text(context.getString(R.string.notification_access)) },
+        supportingContent = { Text(context.getString(R.string.notification_access_subtitle)) },
         trailingContent = {
             if (hasNotificationAccess) {
                 Icon(
@@ -227,7 +209,7 @@ private fun MoreNotificationAccessItem(
                 )
             } else {
                 TextButton(onClick = onClick) {
-                    Text("Enable")
+                    Text(context.getString(R.string.enable))
                 }
             }
         }

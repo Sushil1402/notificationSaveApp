@@ -1,5 +1,6 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,6 +29,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -188,21 +190,21 @@ fun SettingsScreenView(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
-                        SectionCard(modifier = Modifier.padding(top = 20.dp), title = "Storage Management") {
+                        SectionCard(modifier = Modifier.padding(top = 20.dp), title = context.getString(R.string.storage_management)) {
                             SettingsSwitchItemContent(
                                 icon = Icons.Filled.CleaningServices,
-                                title = "Auto Cleanup",
+                                title = context.getString(R.string.storage_auto_cleanup),
                                 subtitle = {
                                     if (autoCleanup) {
                                         val annotatedText = buildAnnotatedString {
-                                            append("Delete notifications older than ")
+                                            append(context.getString(R.string.delete_notifications_old_than))
                                             withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurface)) {
-                                                append("$retentionDays days")
+                                                append(context.getString(R.string.days_count,"$retentionDays"))
                                             }
                                         }
                                         Text(annotatedText)
                                     } else {
-                                        Text("Automatically delete old notifications")
+                                        Text(context.getString(R.string.automatically_delete_old_notifications))
                                     }
                                 },
                                 checked = autoCleanup,
@@ -221,8 +223,9 @@ fun SettingsScreenView(
                     }
 
                     item {
-                        SectionCard(modifier = Modifier, title = "Appearance") {
+                        SectionCard(modifier = Modifier, title = context.getString(R.string.appearance)) {
                             ThemeModeSelector(
+                                context = context,
                                 selectedMode = themeMode,
                                 onModeSelected = viewModel::setThemeMode
                             )
@@ -230,11 +233,11 @@ fun SettingsScreenView(
                     }
 
                     item {
-                        SectionCard(modifier = Modifier,title = "Export & Backup") {
+                        SectionCard(modifier = Modifier,title = context.getString(R.string.export_and_backup)) {
                             SettingsNavItem(
                                 icon = Icons.Filled.FileUpload,
-                                title = "Export All Data",
-                                subtitle = "Export all notifications to Excel file",
+                                title = context.getString(R.string.export_all_data),
+                                subtitle = context.getString(R.string.export_all_notifications_to_excel_file),
                                 onClick = {
                                     viewModel.exportAllData(context)
                                 },
@@ -250,22 +253,22 @@ fun SettingsScreenView(
                                     }
                                 }
                             )
-                            Divider()
+                            HorizontalDivider()
                             SettingsActionItem(
                                 icon = Icons.Filled.Delete,
-                                title = "Clear All Data",
-                                subtitle = "Delete all saved notifications",
+                                title = context.getString(R.string.clear_all_data),
+                                subtitle = context.getString(R.string.clear_all_data_subtitle),
                                 onClick = { showClearAllDialog = true }
                             )
                         }
                     }
 
                     item {
-                        SectionCard(modifier = Modifier, title = "Privacy") {
+                        SectionCard(modifier = Modifier, title = context.getString(R.string.privacy)) {
                             SettingsSwitchItem(
                                 icon = Icons.Filled.Password,
-                                title = "Passcode",
-                                subtitle = "Use passcode to unlock Notisave.",
+                                title = context.getString(R.string.passcode),
+                                subtitle = context.getString(R.string.use_passcode_to_unlock,"${context.getString(R.string.app_name)}"),
                                 checked = passcodeEnabled,
                                 onCheckedChange = { enabled ->
                                     if (enabled) {
@@ -286,19 +289,19 @@ fun SettingsScreenView(
                                     }
                                 }
                             )
-                            Divider()
+                            HorizontalDivider()
                             SettingsSwitchItem(
                                 icon = Icons.Filled.Info,
-                                title = "Lockscreen widget",
-                                subtitle = "Show the widget on lockscreen",
+                                title = context.getString(R.string.lockScreen_widget),
+                                subtitle = context.getString(R.string.show_the_widget_on_lockscreen),
                                 checked = lockscreenWidgetEnabled,
                                 onCheckedChange = { lockscreenWidgetEnabled = it }
                             )
-                            Divider()
+                            HorizontalDivider()
                             SettingsNavItem(
                                 icon = Icons.Filled.Policy,
-                                title = "Privacy policy",
-                                subtitle = "How data is stored",
+                                title = context.getString(R.string.privacy_policy),
+                                subtitle = context.getString(R.string.how_data_is_stored),
                                 onClick = { showPrivacyPolicyDialog = true }
                             )
                         }
@@ -311,6 +314,7 @@ fun SettingsScreenView(
 
                 if (showRetentionBottomSheet) {
                     RetentionPeriodBottomSheet(
+                        context = context,
                         currentDays = selectedRetentionDays,
                         retentionOptions = retentionOptions,
                         onDismiss = { showRetentionBottomSheet = false },
@@ -324,6 +328,7 @@ fun SettingsScreenView(
 
                 if (showClearAllDialog) {
                     ClearAllDataConfirmationDialog(
+                        context = context,
                         onDismiss = { showClearAllDialog = false },
                         onConfirm = {
                             viewModel.clearAllData()
@@ -335,10 +340,10 @@ fun SettingsScreenView(
                 if (showAutoCleanupDialog) {
                     AppAlertDialog(
                         onDismissRequest = { showAutoCleanupDialog = false },
-                        title = "Enable Auto Cleanup?",
-                        text = "Auto cleanup will automatically delete notifications older than the retention period. This action cannot be undone.",
-                        confirmButtonText = "Enable",
-                        dismissButtonText = "Cancel",
+                        title = context.getString(R.string.enable_auto_cleanup),
+                        text = context.getString(R.string.auto_cleanup_will_automatically),
+                        confirmButtonText = context.getString(R.string.enable),
+                        dismissButtonText = context.getString(R.string.cancel),
                         confirmButton = {
                             viewModel.setAutoCleanupEnabled(true)
                             showAutoCleanupDialog = false
@@ -353,11 +358,11 @@ fun SettingsScreenView(
                 if (exportState is SettingsViewModel.ExportState.Error) {
                     AlertDialog(
                         onDismissRequest = { viewModel.resetExportState() },
-                        title = { Text("Export Failed") },
+                        title = { Text(context.getString(R.string.export_failed)) },
                         text = { Text((exportState as SettingsViewModel.ExportState.Error).message) },
                         confirmButton = {
                             TextButton(onClick = { viewModel.resetExportState() }) {
-                                Text("OK")
+                                Text(context.getString(R.string.ok))
                             }
                         }
                     )
@@ -369,7 +374,7 @@ fun SettingsScreenView(
                         onDismissRequest = { showPrivacyPolicyDialog = false },
                         title = {
                             Text(
-                                "Privacy Policy",
+                                context.getString(R.string.privacy_policy),
                                 fontWeight = FontWeight.Bold
                             )
                         },
@@ -379,27 +384,27 @@ fun SettingsScreenView(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    "How Data is Stored:",
+                                    context.getString(R.string.how_data_is_stored),
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text("All notification data is stored locally on your device. We do not collect, transmit, or share your notifications with any external servers.")
+                                Text(context.getString(R.string.all_notification_data_store_locally_desc))
                                 Text(
-                                    "Data Security:",
+                                    context.getString(R.string.data_security),
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text("Your notifications are encrypted and stored securely in your device's local database. Only you have access to this data.")
+                                Text(context.getString(R.string.all_notification_are_encrypted_desc))
                                 Text(
-                                    "Data Usage:",
+                                    context.getString(R.string.data_usage),
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text("Notification data is used solely for displaying and managing your notifications within the app. No data is used for advertising or analytics purposes.")
+                                Text(context.getString(R.string.notification_data_is_used_solely_for_displaying_desc))
                             }
                         },
                         confirmButton = {
                             TextButton(
                                 onClick = { showPrivacyPolicyDialog = false }
                             ) {
-                                Text("OK", color = main_appColor)
+                                Text(context.getString(R.string.ok), color = main_appColor)
                             }
                         }
                     )
@@ -549,6 +554,7 @@ private fun SettingsActionItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RetentionPeriodBottomSheet(
+    context: Context,
     currentDays: Int,
     retentionOptions: List<Int>,
     onDismiss: () -> Unit,
@@ -567,14 +573,14 @@ private fun RetentionPeriodBottomSheet(
         ) {
             // Header
             Text(
-                text = "Retention Period",
+                text =context.getString(R.string.retention_period),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             
             Text(
-                text = "Choose how long to keep notifications",
+                text = context.getString(R.string.choose_how_long_to_keep_notification),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 20.dp)
@@ -620,7 +626,7 @@ private fun RetentionPeriodBottomSheet(
                                     }
                                 )
                                 Text(
-                                    text = "Days",
+                                    text = context.getString(R.string.days),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -653,7 +659,7 @@ private fun RetentionPeriodBottomSheet(
                 )
             ) {
                 Text(
-                    "Enable Auto Cleanup",
+                    context.getString(R.string.enable_auto_cleanup_str),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -664,6 +670,7 @@ private fun RetentionPeriodBottomSheet(
 
 @Composable
 private fun ThemeModeSelector(
+    context: Context,
     selectedMode: ThemeMode,
     onModeSelected: (ThemeMode) -> Unit
 ) {
@@ -674,21 +681,21 @@ private fun ThemeModeSelector(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Theme",
+            text = context.getString(R.string.theme),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "Choose how the app appearance adapts across light, dark, and system default modes.",
+            text = context.getString(R.string.choose_how_the_app_appearance),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         SingleChoiceSegmentedButtonRow {
             val options = listOf(
-                ThemeMode.SYSTEM to Pair(Icons.Filled.Settings, "System"),
-                ThemeMode.LIGHT to Pair(Icons.Filled.LightMode, "Light"),
-                ThemeMode.DARK to Pair(Icons.Filled.DarkMode, "Dark"),
+                ThemeMode.SYSTEM to Pair(Icons.Filled.Settings, context.getString(R.string.system)),
+                ThemeMode.LIGHT to Pair(Icons.Filled.LightMode, context.getString(R.string.light)),
+                ThemeMode.DARK to Pair(Icons.Filled.DarkMode, context.getString(R.string.dark)),
             )
             options.forEachIndexed { index, option ->
                 val (mode, iconAndLabel) = option
@@ -733,18 +740,19 @@ fun SettingsScreenPreviewDark() {
 
 @Composable
 private fun ClearAllDataConfirmationDialog(
+    context: Context,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
     var confirmationText by remember { mutableStateOf(TextFieldValue("")) }
-    val requiredText = "DELETE"
+    val requiredText = context.getString(R.string.delete_txt_upper)
     val isConfirmEnabled = confirmationText.text.trim().equals(requiredText, ignoreCase = false)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "⚠️ Clear All Data",
+                text = context.getString(R.string.clear_all_data_icon_txt),
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFDC2626)
             )
@@ -755,14 +763,15 @@ private fun ClearAllDataConfirmationDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "This will permanently delete all saved notifications. This action cannot be undone.",
+                    text = context.getString(R.string.clear_all_data_desc),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "To confirm, please type \"$requiredText\" in the field below:",
+
+                    text = context.getString(R.string.confirm_please_type, requiredText),
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -770,8 +779,8 @@ private fun ClearAllDataConfirmationDialog(
                 OutlinedTextField(
                     value = confirmationText,
                     onValueChange = { confirmationText = it },
-                    label = { Text("Type: $requiredText") },
-                    placeholder = { Text("Enter $requiredText") },
+                    label = { Text(context.getString(R.string.type_text, requiredText)) },
+                    placeholder = { Text(context.getString(R.string.enter_text, requiredText)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -791,7 +800,7 @@ private fun ClearAllDataConfirmationDialog(
                 
                 if (confirmationText.text.isNotEmpty() && !isConfirmEnabled) {
                     Text(
-                        text = "Text does not match. Please type exactly \"$requiredText\"",
+                        text = context.getString(R.string.text_does_not_match,requiredText),
                         color = Color(0xFFDC2626),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -809,12 +818,12 @@ private fun ClearAllDataConfirmationDialog(
                 disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             ) {
-                Text("Delete All Data")
+                Text(context.getString(R.string.delete_all_data))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text( "Cancel", color = main_appColor)
+                Text( context.getString(R.string.cancel), color = main_appColor)
             }
         }
     )

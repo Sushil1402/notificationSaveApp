@@ -1,6 +1,7 @@
 package com.jetpackComposeTest1.ui.screens.dashboard
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.model.analytics.AppUsageData
 import com.jetpackComposeTest1.ui.components.charts.HourlyBarChart
 import com.jetpackComposeTest1.ui.components.charts.WeeklyBarChart
@@ -88,7 +92,7 @@ fun AnalyticsScreenView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Analytics",
+                    text = context.getString(R.string.analytics),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -96,6 +100,7 @@ fun AnalyticsScreenView(
             }
 
             DateSelectorHeader(
+                context=context,
                 dateString = dateString,
                 onPreviousDay = { viewModel.selectPreviousDay() },
                 onNextDay = { viewModel.selectNextDay() },
@@ -125,6 +130,7 @@ fun AnalyticsScreenView(
                     // Hero Stats Section
                     item {
                         HeroStatsSection(
+                            context =context,
                             totalNotifications = analytics.totalNotifications,
                             changeFromYesterday = analytics.changeFromYesterday,
                             mostActiveHourRange = analytics.mostActiveHourRange,
@@ -143,7 +149,7 @@ fun AnalyticsScreenView(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Weekly Trend",
+                                    text = context.getString(R.string.weekly_trend),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
@@ -172,7 +178,7 @@ fun AnalyticsScreenView(
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                 Text(
-                                    text = "Hourly Activity",
+                                    text = context.getString(R.string.hourly_activity),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
@@ -196,7 +202,7 @@ fun AnalyticsScreenView(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                                    text = "Today App Breakdown",
+                                    text = context.getString(R.string.today_app_breakdown),
                         style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
 
@@ -211,7 +217,7 @@ fun AnalyticsScreenView(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = "No notifications for this day",
+                                            text = context.getString(R.string.no_notifications_for_this_day),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -253,13 +259,13 @@ fun AnalyticsScreenView(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Weekly App Breakdown",
+                                    text = context.getString(R.string.weekly_app_breakdown),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Top 5 apps this week",
+                                    text = context.getString(R.string.top_5_apps_this_week),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
@@ -274,7 +280,7 @@ fun AnalyticsScreenView(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = "No notifications for this week",
+                                            text = context.getString(R.string.no_notifications_for_this_week),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -323,6 +329,7 @@ fun AnalyticsScreenView(
 
 @Composable
 fun DateSelectorHeader(
+    context: Context,
     dateString: String,
     onPreviousDay: () -> Unit,
     onNextDay: () -> Unit,
@@ -353,7 +360,7 @@ fun DateSelectorHeader(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.KeyboardArrowLeft,
+                    Icons.AutoMirrored.Default.KeyboardArrowLeft,
                     contentDescription = "Previous day",
                     tint = Color.White, // Dark arrow
                     modifier = Modifier.size(24.dp)
@@ -391,7 +398,7 @@ fun DateSelectorHeader(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.KeyboardArrowRight,
+                        Icons.AutoMirrored.Default.KeyboardArrowRight,
                         contentDescription = "Next day",
                         tint = if (canGoNext) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(24.dp)
@@ -410,7 +417,7 @@ fun DateSelectorHeader(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = "Today",
+                            text =context.getString(R.string.today),
                             color = Color.White,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium
@@ -424,6 +431,7 @@ fun DateSelectorHeader(
 
 @Composable
 fun HeroStatsSection(
+    context: Context,
     totalNotifications: Int,
     changeFromYesterday: Float,
     mostActiveHourRange: String,
@@ -438,7 +446,7 @@ fun HeroStatsSection(
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "Total notifications",
+                text = context.getString(R.string.total_notifications),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -468,9 +476,9 @@ fun HeroStatsSection(
                         
                         Text(
                             text = if (difference > 0) {
-                                "+$difference vs yesterday"
+                                context.getString(R.string.plus_vs_yesterday,"${difference}")
                             } else {
-                                "$difference vs yesterday"
+                                context.getString(R.string.vs_yesterday,"${difference}")
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = if (difference > 0) Color(0xFF4CAF50) else Color.Red,
@@ -484,7 +492,7 @@ fun HeroStatsSection(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "Most active;",
+                        text = context.getString(R.string.most_active),
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -499,7 +507,7 @@ fun HeroStatsSection(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = "Top app:",
+                        text = context.getString(R.string.top_app),
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -534,7 +542,7 @@ fun HeroStatsSection(
                                     fontSize = 13.sp
                                 )
                                 Text(
-                                    text = if (app.count == 1) "notification" else "notifications",
+                                    text = if (app.count == 1)context.getString(R.string.notification) else context.getString(R.string.notifications),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -550,102 +558,7 @@ fun HeroStatsSection(
 
 @Composable
 fun AppBreakdownRow(
-    context: android.content.Context,
-    app: AppUsageData,
-    maxCount: Int
-) {
-    val appIcon = remember(app.packageName) {
-        try {
-            val bitmap = NotificationUtils.getAppIconBitmap(context, app.packageName)
-            bitmap?.asImageBitmap()
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
-    val progress = if (maxCount > 0) app.count.toFloat() / maxCount else 0f
-    
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // App Icon
-            if (appIcon != null) {
-                Image(
-                    bitmap = appIcon,
-                    contentDescription = app.name,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Box(
-                modifier = Modifier
-                        .size(32.dp)
-                        .background(
-                            color = app.color.copy(alpha = 0.3f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = app.name.take(1).uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = app.color
-                    )
-                }
-            }
-            
-            Column(modifier = Modifier.weight(1f)) {
-            Text(
-                    text = app.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(1.dp)
-                        )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(4.dp))
-                            .fillMaxWidth(progress)
-                            .background(Color(0xFFEA4335), shape = RoundedCornerShape(1.dp))
-                    )
-                }
-            }
-        }
-        
-        // Notification count on the right
-        Text(
-            text = app.count.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-fun AppBreakdownRow(
-    context: android.content.Context,
+    context: Context,
     app: AppUsageData,
     maxCount: Int,
     onClick: () -> Unit
@@ -743,7 +656,7 @@ fun AppBreakdownRow(
                 fontWeight = FontWeight.Medium
             )
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
                 contentDescription = "View details",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -806,7 +719,7 @@ fun DatePickerDialogComposable(
 
 @Composable
 fun WeeklyAppBreakdownRow(
-    context: android.content.Context,
+    context:Context,
     app: AppUsageData,
     maxCount: Int,
     onClick: () -> Unit
@@ -904,7 +817,7 @@ fun WeeklyAppBreakdownRow(
                 fontWeight = FontWeight.Medium
             )
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
                 contentDescription = "View details",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

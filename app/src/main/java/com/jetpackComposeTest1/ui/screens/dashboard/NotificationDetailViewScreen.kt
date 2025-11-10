@@ -222,7 +222,7 @@ fun NotificationDetailViewScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = error ?: "Unknown error",
+                            text = error ?: context.getString(R.string.unknown_error),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -234,7 +234,7 @@ fun NotificationDetailViewScreen(
                                 containerColor = main_appColor
                             )
                         ) {
-                            Text("Go Back")
+                            Text(context.getString(R.string.go_back))
                         }
                     }
                 }
@@ -377,7 +377,7 @@ private fun NotificationDetailContent(
             var showFullImage by remember { mutableStateOf(false) }
             
             Text(
-                text = "Image",
+                text = context.getString(R.string.image),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
@@ -395,7 +395,7 @@ private fun NotificationDetailContent(
             ) {
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = "Big picture - Tap to view full size",
+                    contentDescription = context.getString(R.string.big_picture_tap_to_view),
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 400.dp)
@@ -658,7 +658,7 @@ private fun FullScreenImageDialog(
             ) {
                 Image(
                     bitmap = imageBitmap,
-                    contentDescription = "Full size image - Tap to close",
+                    contentDescription = context.getString(R.string.full_size_image_tap_to_close),
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 800.dp),

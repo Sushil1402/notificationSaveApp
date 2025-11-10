@@ -75,7 +75,7 @@ fun GroupsScreenView(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${groups.size} groups",
+                    text = context.getString(R.string.groups_count,groups.size),
                     style = MaterialTheme.typography.bodyMedium,
                     color = main_appColor
                 )

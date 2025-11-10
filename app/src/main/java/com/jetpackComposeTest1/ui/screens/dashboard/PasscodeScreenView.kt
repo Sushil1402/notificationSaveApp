@@ -29,6 +29,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.PasscodeViewModel
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
@@ -86,9 +87,9 @@ fun PasscodeScreenView(
                     title = {
                         Text(
                             text = when {
-                                isDisabling -> "Disable Passcode"
-                                isSettingUp -> "Set Passcode"
-                                else -> "Enter Passcode"
+                                isDisabling -> context.getString(R.string.disable_passcode)
+                                isSettingUp -> context.getString(R.string.set_passcode)
+                                else -> context.getString(R.string.enter_passcode)
                             },
                             color = Color.White,
                             fontWeight = FontWeight.Bold
@@ -127,11 +128,11 @@ fun PasscodeScreenView(
                 // Title
                 Text(
                     text = when {
-                        isDisabling -> "Enter Passcode"
+                        isDisabling -> context.getString(R.string.enter_passcode)
                         isSettingUp -> {
-                            if (passcodeState.isConfirming) "Confirm Passcode" else "Create Passcode"
+                            if (passcodeState.isConfirming) context.getString(R.string.confirm_passcode) else context.getString(R.string.create_passcode)
                         }
-                        else -> "Enter Passcode"
+                        else -> context.getString(R.string.enter_passcode)
                     },
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
@@ -143,7 +144,7 @@ fun PasscodeScreenView(
                 // Subtitle (only show in verification mode)
                 if (!isSettingUp && !isDisabling) {
                     Text(
-                        text = "Please enter your passcode",
+                        text = context.getString(R.string.please_enter_your_passcode),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -283,9 +284,7 @@ private fun NumberButton(
             modifier = Modifier
                 .size(70.dp)
                 .clickable(
-                    // 👇 keep same interactionSource
                     interactionSource = interactionSource,
-                    // 👇 remove ripple effect
                     indication = null,
                     onClick = onClick
                 ),

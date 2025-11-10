@@ -71,6 +71,7 @@
 
     <!-- Group Screen -->
     <string name="notification_group">Notification Groups</string>
+    <string name="groups_count">%d groups</string>
     <string name="delete_group">Delete Group</string>
     <string name="are_you_sure_delete_group">Are you sure you want to delete "%s"? This action cannot be undone.</string>
     <string name="group_label_muted">muted</string>
@@ -87,5 +88,113 @@
 
     <!-- Setting Screen -->
     <string name="settings">Settings</string>
+    <string name="storage_management">Storage Management</string>
+    <string name="storage_auto_cleanup">Auto Cleanup</string>
+    <string name="delete_notifications_old_than">Delete notifications older than </string>
+    <string name="days_count">%s days</string>
+    <string name="automatically_delete_old_notifications">Automatically delete old notifications</string>
+    <string name="appearance">Appearance</string>
+    <string name="export_and_backup">Export &amp; Backup</string>
+    <string name="export_all_data">Export All Data</string>
+    <string name="export_all_notifications_to_excel_file">Export all notifications to Excel file</string>
+    <string name="clear_all_data">Clear All Data</string>
+    <string name="clear_all_data_subtitle">Delete all saved notifications</string>
+    <string name="privacy">Privacy</string>
+    <string name="passcode">Passcode</string>
+    <string name="use_passcode_to_unlock">Use passcode to unlock %s.</string>
+    <string name="lockScreen_widget">Lockscreen widget</string>
+    <string name="show_the_widget_on_lockscreen">Show the widget on lockscreen</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="how_data_is_stored">How data is stored</string>
+    <string name="enable_auto_cleanup">Enable Auto Cleanup?</string>
+    <string name="auto_cleanup_will_automatically">Auto cleanup will automatically delete notifications older than the retention period. This action cannot be undone.</string>
+    <string name="export_failed">Export Failed</string>
+    <string name="ok">OK</string>
+    <string name="all_notification_data_store_locally_desc">All notification data is stored locally on your device. We do not collect, transmit, or share your notifications with any external servers.</string>
+    <string name="data_security">Data Security:</string>
+    <string name="all_notification_are_encrypted_desc">Your notifications are encrypted and stored securely in your device\'s local database. Only you have access to this data.</string>
+    <string name="data_usage">Data Usage:</string>
+    <string name="notification_data_is_used_solely_for_displaying_desc">Notification data is used solely for displaying and managing your notifications within the app. No data is used for advertising or analytics purposes.</string>
+    <string name="retention_period">Retention Period</string>
+    <string name="choose_how_long_to_keep_notification">Choose how long to keep notifications</string>
+    <string name="days">Days</string>
+    <string name="enable_auto_cleanup_str">Enable Auto Cleanup</string>
+    <string name="theme">Theme</string>
+    <string name="choose_how_the_app_appearance">Choose how the app appearance adapts across light, dark, and system default modes.</string>
+    <string name="system">System</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="delete_txt_upper">DELETE</string>
+    <string name="clear_all_data_icon_txt">⚠️ Clear All Data</string>
+    <string name="clear_all_data_desc">This will permanently delete all saved notifications. This action cannot be undone.</string>
+    <string name="confirm_please_type">To confirm, please type "%s" in the field below:</string>
+    <string name="type_text">Type: %s</string>
+    <string name="enter_text">Enter %s</string>
+    <string name="text_does_not_match">Text does not match. Please type exactly "%s"</string>
+    <string name="delete_all_data">Delete All Data</string>
+
+
+    <!-- Analytics Screen -->
+    <string name="analytics">Analytics</string>
+    <string name="weekly_trend">Weekly Trend</string>
+    <string name="hourly_activity">Hourly Activity</string>
+    <string name="today_app_breakdown">Today App Breakdown</string>
+    <string name="no_notifications_for_this_day">No notifications for this day</string>
+    <string name="weekly_app_breakdown">Weekly App Breakdown</string>
+    <string name="top_5_apps_this_week">Top 5 apps this week</string>
+    <string name="no_notifications_for_this_week">No notifications for this week</string>
+    <string name="total_notifications">Total notifications</string>
+    <string name="plus_vs_yesterday">+%s vs yesterday</string>
+    <string name="vs_yesterday">%s vs yesterday</string>
+    <string name="most_active">Most active:</string>
+    <string name="top_app">Top app:</string>
+    <string name="notification">notification</string>
+    <string name="notifications">notifications</string>
+
+    <!-- More Screen -->
+    <string name="more">More</string>
+    <string name="notification_access">Notification Access</string>
+    <string name="notification_access_subtitle">Allow app to read notifications</string>
+    <string name="options">Options</string>
+    <string name="app_settings_subtitle">App settings and preferences</string>
+    <string name="about">About</string>
+    <string name="about_subtitle">App information and version</string>
+    <string name="help_and_support">Help &amp; Support</string>
+    <string name="help_and_support_subtitle">Get help and contact support</string>
+    <string name="share">Share</string>
+    <string name="share_app">Share App</string>
+    <string name="share_subtitle">Share this app with friends</string>
+
+    <!-- App Selection Screen -->
+    <string name="search_apps">Search apps…</string>
+    <string name="all_apps">All apps</string>
+    <string name="no_apps_found">No apps found</string>
+    <string name="try_a_different_search_term">Try a different search term</string>
+    <string name="no_apps">No apps</string>
+    <string name="no_apps_in_database">No apps in database</string>
+    <string name="app_will_appear_here_after_saved">Apps will appear here after notifications are saved</string>
+    <string name="save_notifications">Save notifications</string>
+    <string name="notifications_from_selected_app_will_save_app">Notifications from selected apps will be saved on %s.</string>
+    <string name="system_app">System App</string>
+
+    <!-- Group apps screen  -->
+    <string name="found_size_apps">Found %s apps</string>
+
+
+    <!-- Notification Detail Screen -->
+    <string name="go_back">Go Back</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="image">Image</string>
+    <string name="big_picture_tap_to_view">Big picture - Tap to view full size</string>
+    <string name="full_size_image_tap_to_close">Full size image - Tap to close</string>
+
+    <!-- Passcode Screen view-->
+    <string name="disable_passcode">Disable Passcode</string>
+    <string name="set_passcode">Set Passcode</string>
+    <string name="enter_passcode">Enter Passcode</string>
+    <string name="confirm_passcode">Confirm Passcode</string>
+    <string name="create_passcode">Create Passcode</string>
+    <string name="please_enter_your_passcode">Please enter your passcode</string>
+
 
 </resources>

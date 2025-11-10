@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.DatabaseAppSelectionViewModel
 import com.jetpackComposeTest1.ui.screens.appselection.viewmodel.DatabaseAppInfo
 import com.jetpackComposeTest1.ui.theme.main_appColor
@@ -48,6 +49,7 @@ fun DatabaseAppSelectionScreen(
     description: String = "Choose apps to add to your notification group.",
     confirmButtonText: String = "Add to Group"
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -72,7 +74,7 @@ fun DatabaseAppSelectionScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        placeholder = { Text("Search apps...") },
+                        placeholder = { Text(context.getString(R.string.search_apps)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -154,7 +156,7 @@ fun DatabaseAppSelectionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "All apps",
+                    text = context.getString(R.string.all_apps),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -260,12 +262,12 @@ fun DatabaseAppSelectionScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No apps found",
+                        text = context.getString(R.string.no_apps_found),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Try a different search term",
+                        text = context.getString(R.string.try_a_different_search_term),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -283,18 +285,18 @@ fun DatabaseAppSelectionScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "No apps",
+                        contentDescription = context.getString(R.string.no_apps),
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No apps in database",
+                        text = context.getString(R.string.no_apps_in_database),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Apps will appear here after notifications are saved",
+                        text = context.getString(R.string.app_will_appear_here_after_saved),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -389,7 +391,7 @@ private fun DatabaseAppItem(
                     } else {
                         // Placeholder icon
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                            imageVector = Icons.Default.Search,
                             contentDescription = appInfo.appName,
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
