@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.PasscodeViewModel
@@ -344,7 +345,7 @@ private fun BackspaceButton(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Face,
+                    imageVector = Icons.Default.Close,
                     contentDescription = "Delete",
                     tint = Color.Black,
                     modifier = Modifier.size(32.dp)

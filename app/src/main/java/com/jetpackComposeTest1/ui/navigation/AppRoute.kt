@@ -19,21 +19,6 @@ object LoginScreenRoute:AppNavigationRoute
 object DashboardScreenRoute:AppNavigationRoute
 
 @Serializable
-object  StatingViewRoute:AppNavigationRoute
-
-@Serializable
-data class SecondViewRoute(val text:String?):AppNavigationRoute
-
-@Serializable
-object HomeScreenRoute:AppNavigationRoute
-
-@Serializable
-object ProfileScreenRoute:AppNavigationRoute
-
-@Serializable
-object CartScreenRoute:AppNavigationRoute
-
-@Serializable
 object SettingScreenRoute:AppNavigationRoute
 
 @Serializable

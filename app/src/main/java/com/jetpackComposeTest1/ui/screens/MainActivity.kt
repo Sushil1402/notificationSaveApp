@@ -1,7 +1,9 @@
 package com.jetpackComposeTest1.presentation
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
@@ -44,10 +47,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
+
             val context = LocalContext.current
+            val activity = remember(context) { context as? Activity }
             val appPreferences = remember { AppPreferences(context) }
-            
+
+            val navController = rememberNavController()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+
+            val handleBack: () -> Unit = {
+                if (!navController.popBackStack()) {
+                    activity?.finish()
+                }
+            }
+
+            BackHandler(
+                enabled = currentDestination?.route == DashboardScreenRoute::class.qualifiedName &&
+                        navController.previousBackStackEntry == null
+            ) {
+                activity?.finish()
+            }
+
             // Check if passcode is enabled to determine start destination
             val passcodeEnabled = remember { appPreferences.isPasscodeEnabled() }
             val hasPasscode = remember { appPreferences.getPasscode() != null }
@@ -56,7 +77,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 DashboardScreenRoute
             }
-            
+
             JetpackComposeTest1Theme {
                 Column(modifier = Modifier.fillMaxSize()) {
                     NavHost(
@@ -66,10 +87,10 @@ class MainActivity : ComponentActivity() {
                         composable<AppSelectionScreenRoute> {
                             AppSelectionScreen(
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 },
                                 onNavigateToDashboard = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 }
                             )
                         }
@@ -92,7 +113,7 @@ class MainActivity : ComponentActivity() {
                                 isFromNotification = args.isFromNotification,
                                 selectedDate= args.selectedDate,
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 },
                                 onNavigateToDetail = { notificationId ->
                                     navController.navigate(NotificationDetailViewRoute(notificationId))
@@ -105,10 +126,10 @@ class MainActivity : ComponentActivity() {
                             NotificationDetailViewScreen(
                                 notificationId = args.notificationId,
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 },
                                 onNotificationDeleted = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 }
                             )
                         }
@@ -118,7 +139,7 @@ class MainActivity : ComponentActivity() {
                             DatabaseAppSelectionScreen(
                                 groupName=args.groupName,
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 },
                                 title = "Add Apps to ${args.groupName}",
                                 description = "Select apps to include in your '${args.groupName}' group",
@@ -135,14 +156,14 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(navToScreen)
                                 },
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 }
                             )
                         }
                         composable<AllUnreadNotificationsRoute> {
                             AllUnreadNotificationsScreen(
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 },
                                 onNavigateToDetail = { notificationId ->
                                     navController.navigate(NotificationDetailViewRoute(notificationId))
@@ -156,7 +177,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(route)
                                 },
                                 onNavigateBack = {
-                                    navController.popBackStack()
+                                    handleBack()
                                 }
                             )
                         }
@@ -169,11 +190,11 @@ class MainActivity : ComponentActivity() {
                                     null // No back button on initial launch
                                 },
                                 onPasscodeVerified = {
-                                    // Navigate to dashboard after successful verification
-                                    navController.navigate(DashboardScreenRoute) {
-                                        // Clear back stack so user can't go back to passcode screen
-                                        popUpTo(PasscodeScreenRoute) {
-                                            inclusive = true
+                                    if (!navController.popBackStack()) {
+                                        navController.navigate(DashboardScreenRoute) {
+                                            popUpTo(PasscodeScreenRoute) {
+                                                inclusive = true
+                                            }
                                         }
                                     }
                                 }
