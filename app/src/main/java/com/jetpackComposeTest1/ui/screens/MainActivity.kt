@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.jetpackComposeTest1.ui.navigation.AllUnreadNotificationsRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
+import com.jetpackComposeTest1.ui.navigation.AdFreeScreenRoute
 import com.jetpackComposeTest1.ui.navigation.DashboardScreenRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailViewRoute
@@ -39,6 +40,7 @@ import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailViewScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.SettingsScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.PasscodeScreenView
+import com.jetpackComposeTest1.ui.screens.dashboard.AdFreeScreenView
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -187,6 +189,14 @@ class MainActivity : ComponentActivity() {
                                 navToScreen = { route ->
                                     navController.navigate(route)
                                 },
+                                onNavigateBack = {
+                                    handleBack()
+                                }
+                            )
+                        }
+
+                        composable<AdFreeScreenRoute> {
+                            AdFreeScreenView(
                                 onNavigateBack = {
                                     handleBack()
                                 }

@@ -29,6 +29,7 @@ import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.PermissionChecker
 import androidx.compose.runtime.*
 import com.jetpackComposeTest1.R
+import com.jetpackComposeTest1.ui.navigation.AdFreeScreenRoute
 
 @Composable
 fun MoreScreenView(
@@ -88,6 +89,13 @@ fun MoreScreenView(
 
                 item {
                     SectionCard(modifier = Modifier, title = context.getString(R.string.options)) {
+                        MoreNavItem(
+                            icon = Icons.Filled.Star,
+                            title = context.getString(R.string.ad_free_nav_title),
+                            subtitle = context.getString(R.string.ad_free_nav_subtitle),
+                            onClick = { navToScreen(AdFreeScreenRoute) }
+                        )
+                        HorizontalDivider()
                         MoreNavItem(
                             icon = Icons.Filled.Settings,
                             title = context.getString(R.string.settings),

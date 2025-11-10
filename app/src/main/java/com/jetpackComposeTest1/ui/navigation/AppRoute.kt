@@ -25,6 +25,9 @@ object SettingScreenRoute:AppNavigationRoute
 object AppSelectionScreenRoute:AppNavigationRoute
 
 @Serializable
+object AdFreeScreenRoute:AppNavigationRoute
+
+@Serializable
 data class GroupAppSelectionRoute(
     val groupName: String,
     val groupId: String? = null

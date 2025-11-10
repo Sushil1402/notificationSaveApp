@@ -164,6 +164,34 @@
     <string name="share">Share</string>
     <string name="share_app">Share App</string>
     <string name="share_subtitle">Share this app with friends</string>
+    <string name="ad_free_nav_title">Ad-free</string>
+    <string name="ad_free_nav_subtitle">Remove ads and unlock premium features</string>
+
+    <!-- Ad Free Screen -->
+    <string name="ad_free">Ad-free</string>
+    <string name="ad_free_subtitle">Upgrade to remove ads and unlock the full experience</string>
+    <string name="ad_free_feature_list_title">Upgrade Plan</string>
+    <string name="ad_free_feature_backup_restore">Backup &amp; Restore Contacts</string>
+    <string name="ad_free_feature_ads_free">Ads-free experience</string>
+    <string name="ad_free_feature_calling_themes">Stunning calling themes</string>
+    <string name="ad_free_feature_lookup">Unlimited lookup contacts</string>
+    <string name="ad_free_feature_blacklist">Contact blacklist</string>
+    <string name="ad_free_plan_monthly">Monthly</string>
+    <string name="ad_free_plan_monthly_price">$0.99</string>
+    <string name="ad_free_plan_monthly_subtitle">Billed every month</string>
+    <string name="ad_free_plan_semiannual">6 Months</string>
+    <string name="ad_free_plan_semiannual_price">$4.99</string>
+    <string name="ad_free_plan_semiannual_original_price">$5.94</string>
+    <string name="ad_free_plan_semiannual_subtitle">Billed every 6 months</string>
+    <string name="ad_free_plan_yearly">Yearly</string>
+    <string name="ad_free_plan_yearly_price">$7.99</string>
+    <string name="ad_free_plan_yearly_original_price">$11.88</string>
+    <string name="ad_free_plan_yearly_subtitle">Billed annually</string>
+    <string name="ad_free_plan_discount_sixteen">OFF 16%</string>
+    <string name="ad_free_plan_discount_thirty_two">OFF 32%</string>
+    <string name="ad_free_note">These subscriptions are auto-renewable and will be instantly charged. They reactivate at the end of each selected period and can be cancelled at any time.</string>
+    <string name="ad_free_continue_button">Continue with %1$s</string>
+    <string name="ad_free_free_plan_button">Enjoy Free Plan</string>
 
     <!-- App Selection Screen -->
     <string name="search_apps">Search apps…</string>
