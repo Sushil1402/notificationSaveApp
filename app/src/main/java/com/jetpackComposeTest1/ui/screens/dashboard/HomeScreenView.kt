@@ -43,9 +43,11 @@ import com.jetpackComposeTest1.ui.components.PermissionBottomSheet
 import com.jetpackComposeTest1.ui.components.PermissionStatusBanner
 import com.jetpackComposeTest1.ui.components.SearchEmptyStateMessage
 import com.jetpackComposeTest1.ui.components.SearchToolBar
+import com.jetpackComposeTest1.ui.components.ads.AdBannerPlaceholder
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
+import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.PremiumViewModel
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.NotificationHomeViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.PermissionManager
@@ -55,11 +57,13 @@ import kotlinx.coroutines.delay
 fun HomeScreenView(
     navToScreen: (AppNavigationRoute) -> Unit,
     permissionManager: PermissionManager = hiltViewModel(),
-    homeScreenVM: NotificationHomeViewModel = hiltViewModel()
+    homeScreenVM: NotificationHomeViewModel = hiltViewModel(),
+    premiumViewModel: PremiumViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val permissionState by permissionManager.permissionState.collectAsState()
     val showPermissionBottomSheet by permissionManager.showPermissionBottomSheet.collectAsState()
+    val isPremium by premiumViewModel.isPremium.collectAsState()
 
     LaunchedEffect(Unit) {
         permissionManager.checkPermissions(context)
@@ -151,6 +155,13 @@ fun HomeScreenView(
                     onPermissionClick = { permissionManager.showPermissionDialog() }
                 )
             }
+
+//            if (!isPremium) {
+//                AdBannerPlaceholder(
+//                    modifier = Modifier
+//                        .padding(horizontal = 16.dp, vertical = 12.dp)
+//                )
+//            }
 
             LaunchedEffect(permissionState.allGranted) {
                 if (permissionState.allGranted && !homeScreenVM.isAppSelectionCompleted()) {

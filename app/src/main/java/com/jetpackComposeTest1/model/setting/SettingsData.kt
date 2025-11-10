@@ -7,5 +7,6 @@ data class SettingsData(
     val storageUsed: Float,
     val storagePercentage: Float,
     val themeMode: ThemeMode,
-    val notificationSound: Boolean
+    val notificationSound: Boolean,
+    val isPremiumUser: Boolean
 )

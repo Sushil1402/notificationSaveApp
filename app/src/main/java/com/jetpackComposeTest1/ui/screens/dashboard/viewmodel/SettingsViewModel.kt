@@ -33,7 +33,8 @@ class SettingsViewModel @Inject constructor(
             storageUsed = 45.6f,
             storagePercentage = 65.2f,
             themeMode = ThemeMode.SYSTEM,
-            notificationSound = true
+            notificationSound = true,
+            isPremiumUser = false
         )
     )
     val settings: StateFlow<SettingsData> = _settings.asStateFlow()
@@ -45,15 +46,36 @@ class SettingsViewModel @Inject constructor(
     init {
         // Load initial settings from preferences
         loadSettings()
+        observePremiumStatus()
     }
 
     private fun loadSettings() {
         viewModelScope.launch {
+            val isPremium = appPreferences.isPremiumUnlocked()
+            if (!isPremium && appPreferences.isAutoCleanupEnabled()) {
+                appPreferences.setAutoCleanupEnabled(false)
+            }
             _settings.value = _settings.value.copy(
-                autoCleanup = appPreferences.isAutoCleanupEnabled(),
-                retentionDays = appPreferences.getRetentionDays(),
-                themeMode = appPreferences.getThemeMode()
+                autoCleanup = if (isPremium) appPreferences.isAutoCleanupEnabled() else false,
+                retentionDays = if (isPremium) appPreferences.getRetentionDays() else 30,
+                themeMode = appPreferences.getThemeMode(),
+                isPremiumUser = isPremium
             )
+        }
+    }
+
+    private fun observePremiumStatus() {
+        viewModelScope.launch {
+            appPreferences.premiumStatusFlow().collect { isPremium ->
+                if (!isPremium && appPreferences.isAutoCleanupEnabled()) {
+                    appPreferences.setAutoCleanupEnabled(false)
+                }
+                _settings.value = _settings.value.copy(
+                    isPremiumUser = isPremium,
+                    autoCleanup = if (isPremium) appPreferences.isAutoCleanupEnabled() else false,
+                    retentionDays = if (isPremium) appPreferences.getRetentionDays() else 30
+                )
+            }
         }
     }
 
@@ -65,6 +87,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setAutoCleanupEnabled(enabled: Boolean) {
+        if (!_settings.value.isPremiumUser) {
+            return
+        }
         viewModelScope.launch {
             // Save to preferences
             appPreferences.setAutoCleanupEnabled(enabled)
@@ -82,6 +107,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setRetentionDays(days: Int) {
+        if (!_settings.value.isPremiumUser) {
+            return
+        }
         viewModelScope.launch {
             // Save to preferences
             appPreferences.setRetentionDays(days)
@@ -116,6 +144,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun exportAllData(context: Context) {
+        if (!_settings.value.isPremiumUser) {
+            return
+        }
         viewModelScope.launch {
             _exportState.value = ExportState.Exporting
             try {

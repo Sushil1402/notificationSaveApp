@@ -16,6 +16,9 @@
     <string name="notification_count">%d notifications</string>
     <string name="home_all_unread_content_description">Show all unread notifications</string>
     <string name="home_search_content_description">Search notifications</string>
+    <string name="ad_badge">Ad</string>
+    <string name="ad_placeholder_title">Sponsored message</string>
+    <string name="ad_placeholder_subtitle">Upgrade to Premium to hide ads like this.</string>
 
 
 
@@ -110,6 +113,10 @@
     <string name="auto_cleanup_will_automatically">Auto cleanup will automatically delete notifications older than the retention period. This action cannot be undone.</string>
     <string name="export_failed">Export Failed</string>
     <string name="ok">OK</string>
+    <string name="upgrade_now">Upgrade</string>
+    <string name="premium_badge_label">Premium</string>
+    <string name="premium_auto_cleanup_locked_subtitle">Upgrade to automate notification cleanup on your schedule.</string>
+    <string name="premium_export_locked_subtitle">Get unlimited, full-history exports with Premium.</string>
     <string name="all_notification_data_store_locally_desc">All notification data is stored locally on your device. We do not collect, transmit, or share your notifications with any external servers.</string>
     <string name="data_security">Data Security:</string>
     <string name="all_notification_are_encrypted_desc">Your notifications are encrypted and stored securely in your device\'s local database. Only you have access to this data.</string>
@@ -143,6 +150,7 @@
     <string name="weekly_app_breakdown">Weekly App Breakdown</string>
     <string name="top_5_apps_this_week">Top 5 apps this week</string>
     <string name="no_notifications_for_this_week">No notifications for this week</string>
+    <string name="premium_weekly_breakdown_locked_subtitle">See your weekly top apps and trends with Premium.</string>
     <string name="total_notifications">Total notifications</string>
     <string name="plus_vs_yesterday">+%s vs yesterday</string>
     <string name="vs_yesterday">%s vs yesterday</string>
@@ -170,12 +178,11 @@
     <!-- Ad Free Screen -->
     <string name="ad_free">Ad-free</string>
     <string name="ad_free_subtitle">Upgrade to remove ads and unlock the full experience</string>
-    <string name="ad_free_feature_list_title">Upgrade Plan</string>
-    <string name="ad_free_feature_backup_restore">Backup &amp; Restore Contacts</string>
-    <string name="ad_free_feature_ads_free">Ads-free experience</string>
-    <string name="ad_free_feature_calling_themes">Stunning calling themes</string>
-    <string name="ad_free_feature_lookup">Unlimited lookup contacts</string>
-    <string name="ad_free_feature_blacklist">Contact blacklist</string>
+    <string name="ad_free_feature_list_title">What you get</string>
+    <string name="ad_free_feature_weekly_breakdown">Weekly app breakdown insights</string>
+    <string name="ad_free_feature_export_all">Export all data in one tap</string>
+    <string name="ad_free_feature_auto_cleanup">Automatic cleanup controls</string>
+    <string name="ad_free_feature_ad_removal">Remove every ad</string>
     <string name="ad_free_plan_monthly">Monthly</string>
     <string name="ad_free_plan_monthly_price">$0.99</string>
     <string name="ad_free_plan_monthly_subtitle">Billed every month</string>
@@ -192,6 +199,9 @@
     <string name="ad_free_note">These subscriptions are auto-renewable and will be instantly charged. They reactivate at the end of each selected period and can be cancelled at any time.</string>
     <string name="ad_free_continue_button">Continue with %1$s</string>
     <string name="ad_free_free_plan_button">Enjoy Free Plan</string>
+    <string name="premium_active_title">Premium active</string>
+    <string name="premium_active_subtitle">You already unlocked every feature</string>
+    <string name="ads_free">Ads Free</string>
 
     <!-- App Selection Screen -->
     <string name="search_apps">Search apps…</string>

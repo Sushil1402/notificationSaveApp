@@ -37,6 +37,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,14 +54,41 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.jetpackComposeTest1.R
+import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.PremiumViewModel
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdFreeScreenView(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    premiumViewModel: PremiumViewModel = hiltViewModel()
+) {
+    val isPremium by premiumViewModel.isPremium.collectAsState()
+
+    LaunchedEffect(isPremium) {
+        if (isPremium) {
+            onNavigateBack()
+        }
+    }
+
+    AdFreeScreenContent(
+        onNavigateBack = onNavigateBack,
+        isPremium = isPremium,
+        onPurchase = { premiumViewModel.setPremium(true) },
+        onSelectFreePlan = { premiumViewModel.setPremium(false) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AdFreeScreenContent(
+    onNavigateBack: () -> Unit,
+    isPremium: Boolean,
+    onPurchase: () -> Unit,
+    onSelectFreePlan: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -121,6 +150,10 @@ fun AdFreeScreenView(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
+            if (isPremium) {
+                ActiveSubscriptionBanner()
+            }
+
             Text(
                 text = stringResource(id = R.string.ad_free_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
@@ -151,7 +184,7 @@ fun AdFreeScreenView(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { /* TODO: Hook up billing flow */ },
+                    onClick = onPurchase,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = featureAccent,
@@ -167,7 +200,7 @@ fun AdFreeScreenView(
                 }
 
                 OutlinedButton(
-                    onClick = { /* TODO: Handle free plan */ },
+                    onClick = onSelectFreePlan,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
@@ -210,11 +243,10 @@ private fun FeatureHighlightCard(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            FeatureRow(text = stringResource(id = R.string.ad_free_feature_backup_restore))
-            FeatureRow(text = stringResource(id = R.string.ad_free_feature_ads_free))
-            FeatureRow(text = stringResource(id = R.string.ad_free_feature_calling_themes))
-            FeatureRow(text = stringResource(id = R.string.ad_free_feature_lookup))
-            FeatureRow(text = stringResource(id = R.string.ad_free_feature_blacklist))
+            FeatureRow(text = stringResource(id = R.string.weekly_app_breakdown))
+            FeatureRow(text = stringResource(id = R.string.export_all_data))
+            FeatureRow(text = stringResource(id = R.string.storage_auto_cleanup))
+            FeatureRow(text = stringResource(id = R.string.ad_free_feature_ad_removal))
         }
     }
 }
@@ -343,11 +375,58 @@ private data class AdFreePlan(
     val originalPrice: String?
 )
 
+@Composable
+private fun ActiveSubscriptionBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(main_appColor.copy(alpha = 0.2f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                tint = main_appColor
+            )
+        }
+        Column {
+            Text(
+                text = stringResource(id = R.string.premium_active_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(id = R.string.premium_active_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun AdFreeScreenPreview() {
     JetpackComposeTest1Theme {
-        AdFreeScreenView(onNavigateBack = {})
+        AdFreeScreenContent(
+            onNavigateBack = {},
+            isPremium = false,
+            onPurchase = {},
+            onSelectFreePlan = {}
+        )
     }
 }
 

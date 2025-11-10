@@ -2,6 +2,7 @@ package com.jetpackComposeTest1.ui.screens.dashboard
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,10 +64,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.size
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.model.setting.SettingsData
@@ -76,6 +79,7 @@ import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.PasscodeScreenRoute
+import com.jetpackComposeTest1.ui.navigation.AdFreeScreenRoute
 import com.jetpackComposeTest1.data.local.preferences.AppPreferences
 import com.jetpackComposeTest1.ui.utils.Utils.shareExcelFile
 import com.jetpackComposeTest1.model.setting.ThemeMode
@@ -98,7 +102,8 @@ fun SettingsScreenView(
             storageUsed = 0f,
             storagePercentage = 0f,
             themeMode = ThemeMode.SYSTEM,
-            notificationSound = true
+            notificationSound = true,
+            isPremiumUser = false
         )
     }
     
@@ -130,6 +135,7 @@ fun SettingsScreenView(
     var selectedRetentionDays by remember { mutableStateOf(retentionDays) }
     
     val retentionOptions = listOf(30, 60, 90)
+    val isPremium = settings.isPremiumUser
 
     // Handle export state changes
     LaunchedEffect(exportState) {
@@ -191,34 +197,41 @@ fun SettingsScreenView(
                 ) {
                     item {
                         SectionCard(modifier = Modifier.padding(top = 20.dp), title = context.getString(R.string.storage_management)) {
-                            SettingsSwitchItemContent(
-                                icon = Icons.Filled.CleaningServices,
-                                title = context.getString(R.string.storage_auto_cleanup),
-                                subtitle = {
-                                    if (autoCleanup) {
-                                        val annotatedText = buildAnnotatedString {
-                                            append(context.getString(R.string.delete_notifications_old_than))
-                                            withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurface)) {
-                                                append(context.getString(R.string.days_count,"$retentionDays"))
+                            if (isPremium) {
+                                SettingsSwitchItemContent(
+                                    icon = Icons.Filled.CleaningServices,
+                                    title = context.getString(R.string.storage_auto_cleanup),
+                                    subtitle = {
+                                        if (autoCleanup) {
+                                            val annotatedText = buildAnnotatedString {
+                                                append(context.getString(R.string.delete_notifications_old_than))
+                                                withStyle(style = SpanStyle(color = if (retentionDays == 30) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurface)) {
+                                                    append(context.getString(R.string.days_count,"$retentionDays"))
+                                                }
                                             }
+                                            Text(annotatedText)
+                                        } else {
+                                            Text(context.getString(R.string.automatically_delete_old_notifications))
                                         }
-                                        Text(annotatedText)
-                                    } else {
-                                        Text(context.getString(R.string.automatically_delete_old_notifications))
+                                    },
+                                    checked = autoCleanup,
+                                    onCheckedChange = { newValue ->
+                                        if (newValue && !autoCleanup) {
+                                            selectedRetentionDays = retentionDays
+                                            showRetentionBottomSheet = true
+                                        } else {
+                                            viewModel.setAutoCleanupEnabled(newValue)
+                                        }
                                     }
-                                },
-                                checked = autoCleanup,
-                                onCheckedChange = { newValue ->
-                                    if (newValue && !autoCleanup) {
-                                        // User is enabling auto cleanup - show retention period bottom sheet
-                                        selectedRetentionDays = retentionDays
-                                        showRetentionBottomSheet = true
-                                    } else {
-                                        // User is disabling - allow directly
-                                        viewModel.setAutoCleanupEnabled(newValue)
-                                    }
-                                }
-                            )
+                                )
+                            } else {
+                                PremiumSettingsLockedItem(
+                                    icon = Icons.Filled.CleaningServices,
+                                    title = context.getString(R.string.storage_auto_cleanup),
+                                    subtitle = context.getString(R.string.premium_auto_cleanup_locked_subtitle),
+                                    onUpgradeClick = { navToScreen(AdFreeScreenRoute) }
+                                )
+                            }
                         }
                     }
 
@@ -234,26 +247,36 @@ fun SettingsScreenView(
 
                     item {
                         SectionCard(modifier = Modifier,title = context.getString(R.string.export_and_backup)) {
-                            SettingsNavItem(
-                                icon = Icons.Filled.FileUpload,
-                                title = context.getString(R.string.export_all_data),
-                                subtitle = context.getString(R.string.export_all_notifications_to_excel_file),
-                                onClick = {
-                                    viewModel.exportAllData(context)
-                                },
-                                trailingContent = {
-                                    if (exportState is SettingsViewModel.ExportState.Exporting) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(20.dp),
-                                            color = main_appColor,
-                                            strokeWidth = 2.dp
-                                        )
-                                    } else {
-                                        Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
+                            if (isPremium) {
+                                SettingsNavItem(
+                                    icon = Icons.Filled.FileUpload,
+                                    title = context.getString(R.string.export_all_data),
+                                    subtitle = context.getString(R.string.export_all_notifications_to_excel_file),
+                                    onClick = {
+                                        viewModel.exportAllData(context)
+                                    },
+                                    trailingContent = {
+                                        if (exportState is SettingsViewModel.ExportState.Exporting) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(20.dp),
+                                                color = main_appColor,
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Icon(Icons.Filled.Info, contentDescription = null, tint = main_appColor)
+                                        }
                                     }
-                                }
-                            )
-                            HorizontalDivider()
+                                )
+                                HorizontalDivider()
+                            } else {
+                                PremiumSettingsLockedItem(
+                                    icon = Icons.Filled.FileUpload,
+                                    title = context.getString(R.string.export_all_data),
+                                    subtitle = context.getString(R.string.premium_export_locked_subtitle),
+                                    onUpgradeClick = { navToScreen(AdFreeScreenRoute) }
+                                )
+                                HorizontalDivider()
+                            }
                             SettingsActionItem(
                                 icon = Icons.Filled.Delete,
                                 title = context.getString(R.string.clear_all_data),
@@ -312,7 +335,7 @@ fun SettingsScreenView(
                     }
                 }
 
-                if (showRetentionBottomSheet) {
+                if (showRetentionBottomSheet && isPremium) {
                     RetentionPeriodBottomSheet(
                         context = context,
                         currentDays = selectedRetentionDays,
@@ -500,6 +523,93 @@ private fun SettingsSwitchItemContent(
             )
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PremiumSettingsLockedItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onUpgradeClick: () -> Unit
+) {
+    val premiumColor = Color(0xFFF9A825)
+    val badgeShape = RoundedCornerShape(6.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Button) { onUpgradeClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(main_appColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = main_appColor)
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(badgeShape)
+                            .background(premiumColor.copy(alpha = 0.18f))
+                            .border(
+                                width = 1.dp,
+                                color = premiumColor.copy(alpha = 0.5f),
+                                shape = badgeShape
+                            )
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.premium_badge_label).uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp
+                            ),
+                            color = premiumColor
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        Button(
+            onClick = onUpgradeClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = premiumColor.copy(alpha = 0.9f),
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text(
+                text = stringResource(id = R.string.upgrade_now),
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+    }
 }
 
 @Composable

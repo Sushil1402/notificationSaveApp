@@ -29,6 +29,7 @@ class AppPreferences @Inject constructor(
         private const val KEY_PASSCODE = "passcode"
         private const val KEY_PASSCODE_DISABLE_INTENT = "passcode_disable_intent"
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_PREMIUM_UNLOCKED = "premium_unlocked"
     }
 
     fun isAppSelectionCompleted(): Boolean {
@@ -120,6 +121,26 @@ class AppPreferences @Inject constructor(
         }
         prefs.registerOnSharedPreferenceChangeListener(listener)
         trySend(getThemeMode())
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    // Premium status
+    fun isPremiumUnlocked(): Boolean {
+        return prefs.getBoolean(KEY_PREMIUM_UNLOCKED, false)
+    }
+
+    fun setPremiumUnlocked(unlocked: Boolean) {
+        prefs.edit().putBoolean(KEY_PREMIUM_UNLOCKED, unlocked).apply()
+    }
+
+    fun premiumStatusFlow(): Flow<Boolean> = callbackFlow {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_PREMIUM_UNLOCKED) {
+                trySend(isPremiumUnlocked()).isSuccess
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        trySend(isPremiumUnlocked())
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 }

@@ -3,6 +3,7 @@ package com.jetpackComposeTest1.ui.screens.dashboard
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,9 +41,12 @@ import com.jetpackComposeTest1.R
 import com.jetpackComposeTest1.model.analytics.AppUsageData
 import com.jetpackComposeTest1.ui.components.charts.HourlyBarChart
 import com.jetpackComposeTest1.ui.components.charts.WeeklyBarChart
+import com.jetpackComposeTest1.ui.components.ads.AdBannerPlaceholder
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
+import com.jetpackComposeTest1.ui.navigation.AdFreeScreenRoute
 import com.jetpackComposeTest1.ui.navigation.NotificationDetailRoute
 import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.AnalyticsViewModel
+import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.PremiumViewModel
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.NotificationUtils
 import java.text.SimpleDateFormat
@@ -50,6 +55,7 @@ import java.util.*
 @Composable
 fun AnalyticsScreenView(
     viewModel: AnalyticsViewModel = hiltViewModel(),
+    premiumViewModel: PremiumViewModel = hiltViewModel(),
     navToScreen: (AppNavigationRoute) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -57,6 +63,7 @@ fun AnalyticsScreenView(
     val dailyAnalytics by viewModel.dailyAnalytics.collectAsState()
     val weeklyAppBreakdown by viewModel.weeklyAppBreakdown.collectAsState()
     val canGoNext by viewModel.canGoToNextDay.collectAsState()
+    val isPremium by premiumViewModel.isPremium.collectAsState()
 
     val dateFormatter = remember { SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()) }
     val dateString = remember(selectedDate) {
@@ -248,69 +255,84 @@ fun AnalyticsScreenView(
                         }
                     }
 
-                    // Weekly App Breakdown Section
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp, bottom = 200.dp, end = 16.dp, start = 16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = context.getString(R.string.weekly_app_breakdown),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = context.getString(R.string.top_5_apps_this_week),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
+                    if (isPremium) {
+                        // Weekly App Breakdown Section
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp, bottom = 200.dp, end = 16.dp, start = 16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = context.getString(R.string.weekly_app_breakdown),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = context.getString(R.string.top_5_apps_this_week),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 12.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                if (weeklyAppBreakdown.isEmpty()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 32.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = context.getString(R.string.no_notifications_for_this_week),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                } else {
-                                    val maxCount = weeklyAppBreakdown.firstOrNull()?.count ?: 1
-                                    weeklyAppBreakdown.forEachIndexed { index, app ->
-                                        WeeklyAppBreakdownRow(
-                                            context = context,
-                                            app = app,
-                                            maxCount = maxCount,
-                                            onClick = {
-                                                navToScreen(
-                                                    NotificationDetailRoute(
-                                                        packageName = app.packageName,
-                                                        appName = app.name,
-                                                        isFromNotification = false,
-                                                        selectedDate = selectedDate
+                                    if (weeklyAppBreakdown.isEmpty()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = context.getString(R.string.no_notifications_for_this_week),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    } else {
+                                        val maxCount = weeklyAppBreakdown.firstOrNull()?.count ?: 1
+                                        weeklyAppBreakdown.forEachIndexed { index, app ->
+                                            WeeklyAppBreakdownRow(
+                                                context = context,
+                                                app = app,
+                                                maxCount = maxCount,
+                                                onClick = {
+                                                    navToScreen(
+                                                        NotificationDetailRoute(
+                                                            packageName = app.packageName,
+                                                            appName = app.name,
+                                                            isFromNotification = false,
+                                                            selectedDate = selectedDate
+                                                        )
                                                     )
-                                                )
+                                                }
+                                            )
+                                            if (index < weeklyAppBreakdown.size - 1) {
+                                                Spacer(modifier = Modifier.height(12.dp))
                                             }
-                                        )
-                                        if (index < weeklyAppBreakdown.size - 1) {
-                                            Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }
                                 }
                             }
                         }
+                    } else {
+                        item {
+                            PremiumLockedCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 200.dp),
+                                title = context.getString(R.string.weekly_app_breakdown),
+                                description = context.getString(R.string.premium_weekly_breakdown_locked_subtitle),
+                                onUpgradeClick = { navToScreen(AdFreeScreenRoute) }
+                            )
+                        }
                     }
+
+
                 } ?: item {
                     Box(
                         modifier = Modifier
@@ -829,4 +851,67 @@ fun WeeklyAppBreakdownRow(
 @Composable
 fun AnalyticsScreenPreview() {
     AnalyticsScreenView()
+}
+
+@Composable
+private fun PremiumLockedCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String,
+    onUpgradeClick: () -> Unit
+) {
+    Card(
+        modifier = modifier.clickable { onUpgradeClick() },
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF6E5)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, Color(0xFFF2D7A8))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x33F9A825)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFF9A825)
+                    )
+                }
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Button(
+                onClick = onUpgradeClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF9A825),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(text = stringResource(id = R.string.upgrade_now))
+            }
+        }
+    }
 }
