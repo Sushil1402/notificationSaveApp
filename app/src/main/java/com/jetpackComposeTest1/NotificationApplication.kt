@@ -3,6 +3,7 @@ package com.jetpackComposeTest1
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.android.gms.ads.MobileAds
 import com.jetpackComposeTest1.ui.utils.NotificationUtils.createNotificationAliveServiceChannel
 import com.jetpackComposeTest1.ui.utils.NotificationUtils.createNotificationChannel
 import dagger.hilt.android.HiltAndroidApp
@@ -16,6 +17,7 @@ class NotificationApplication: Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        MobileAds.initialize(this) {}
         createNotificationChannel(this)
         createNotificationAliveServiceChannel(this)
     }

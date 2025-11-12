@@ -41,13 +41,4 @@ class CleanupManager(
         workManager.cancelUniqueWork(WORK_NAME)
     }
 
-    /**
-     * Check if cleanup work is scheduled
-     */
-    fun isCleanupScheduled(): Boolean {
-        val workInfos = workManager.getWorkInfosForUniqueWork(WORK_NAME).get()
-        return workInfos.isNotEmpty() && 
-               workInfos.any { it.state == androidx.work.WorkInfo.State.ENQUEUED || 
-                             it.state == androidx.work.WorkInfo.State.RUNNING }
-    }
 }

@@ -93,6 +93,12 @@ dependencies {
 
     implementation(libs.androidx.material.icons.extended)
 
+    /* Ads */
+    implementation(libs.play.services.ads)
+
+    /* Google pay billing */
+//    implementation(libs.billing.ktx)
+
 
 
 

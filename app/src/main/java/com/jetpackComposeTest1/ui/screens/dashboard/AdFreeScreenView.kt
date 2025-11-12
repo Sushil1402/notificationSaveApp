@@ -37,7 +37,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,19 +59,12 @@ import com.jetpackComposeTest1.ui.screens.dashboard.viewmodel.PremiumViewModel
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdFreeScreenView(
     onNavigateBack: () -> Unit,
     premiumViewModel: PremiumViewModel = hiltViewModel()
 ) {
     val isPremium by premiumViewModel.isPremium.collectAsState()
-
-    LaunchedEffect(isPremium) {
-        if (isPremium) {
-            onNavigateBack()
-        }
-    }
 
     AdFreeScreenContent(
         onNavigateBack = onNavigateBack,
