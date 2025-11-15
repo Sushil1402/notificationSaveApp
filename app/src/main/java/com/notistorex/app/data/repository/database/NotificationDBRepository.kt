@@ -1,0 +1,19 @@
+package com.notistorex.app.data.repository.database
+
+import com.notistorex.app.db.NotificationEntity
+import kotlinx.coroutines.flow.Flow
+
+interface NotificationDBRepository {
+    suspend fun insertNotification(notificationEntity: NotificationEntity)
+    suspend fun insertNotifications(notifications: List<NotificationEntity>)
+    fun getAllNotifications(): Flow<List<NotificationEntity>>
+    fun getNotificationsByReadStatus(isRead: Boolean): Flow<List<NotificationEntity>>
+    
+    // New methods for notification detail screen
+    fun getNotificationsByPackageName(packageName: String): Flow<List<NotificationEntity>>
+    suspend fun getNotificationById(id: Long): NotificationEntity?
+    suspend fun markAsRead(id: Long)
+    suspend fun updateReadStatus(id: Long, isRead: Boolean)
+    suspend fun deleteNotification(id: Long)
+    suspend fun clearAllNotifications()
+}

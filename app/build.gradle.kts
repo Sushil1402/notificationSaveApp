@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.jetpackComposeTest1"
+    namespace = "com.notistorex.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.jetpackComposeTest1"
+        applicationId = "com.notistorex.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -98,7 +98,7 @@ dependencies {
     implementation(libs.play.services.ads)
 
     /* Google pay billing */
-//    implementation(libs.billing.ktx)
+    implementation(libs.billing.ktx)
 
 
 
