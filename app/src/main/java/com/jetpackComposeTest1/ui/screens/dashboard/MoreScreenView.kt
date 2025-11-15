@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.jetpackComposeTest1.ui.navigation.AppNavigationRoute
 import com.jetpackComposeTest1.ui.navigation.AppSelectionScreenRoute
 import com.jetpackComposeTest1.ui.navigation.SettingScreenRoute
+import com.jetpackComposeTest1.ui.navigation.AboutScreenRoute
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import com.jetpackComposeTest1.ui.theme.main_appColor
 import com.jetpackComposeTest1.ui.utils.PermissionChecker
@@ -107,14 +108,7 @@ fun MoreScreenView(
                             icon = Icons.Filled.Info,
                             title = context.getString(R.string.about),
                             subtitle = context.getString(R.string.about_subtitle),
-                            onClick = { /* Navigate to About */ }
-                        )
-                        HorizontalDivider()
-                        MoreNavItem(
-                            icon = Icons.Filled.SupportAgent,
-                            title = context.getString(R.string.help_and_support),
-                            subtitle = context.getString(R.string.help_and_support_subtitle),
-                            onClick = { /* Navigate to Help */ }
+                            onClick = { navToScreen(AboutScreenRoute) }
                         )
                     }
                 }

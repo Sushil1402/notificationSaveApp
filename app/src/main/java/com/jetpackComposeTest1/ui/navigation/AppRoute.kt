@@ -59,3 +59,6 @@ data class GroupAppsRoute(
 
 @Serializable
 object PasscodeScreenRoute: AppNavigationRoute
+
+@Serializable
+object AboutScreenRoute: AppNavigationRoute

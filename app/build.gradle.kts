@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig  = true
     }
     
     // Exclude problematic dependencies for Apache POI on Android

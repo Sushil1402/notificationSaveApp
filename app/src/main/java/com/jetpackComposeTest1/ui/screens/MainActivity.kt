@@ -29,6 +29,7 @@ import com.jetpackComposeTest1.ui.navigation.GroupAppSelectionRoute
 import com.jetpackComposeTest1.ui.navigation.GroupAppsRoute
 import com.jetpackComposeTest1.ui.navigation.SettingScreenRoute
 import com.jetpackComposeTest1.ui.navigation.PasscodeScreenRoute
+import com.jetpackComposeTest1.ui.navigation.AboutScreenRoute
 import com.jetpackComposeTest1.ui.screens.DashboardScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.GroupAppsScreenView
 import com.jetpackComposeTest1.ui.navigation.LoginScreenRoute
@@ -41,6 +42,7 @@ import com.jetpackComposeTest1.ui.screens.dashboard.NotificationDetailViewScreen
 import com.jetpackComposeTest1.ui.screens.dashboard.SettingsScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.PasscodeScreenView
 import com.jetpackComposeTest1.ui.screens.dashboard.AdFreeScreenView
+import com.jetpackComposeTest1.ui.screens.dashboard.AboutScreenView
 import com.jetpackComposeTest1.ui.theme.JetpackComposeTest1Theme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -218,6 +220,14 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     }
+                                }
+                            )
+                        }
+
+                        composable<AboutScreenRoute> {
+                            AboutScreenView(
+                                onNavigateBack = {
+                                    handleBack()
                                 }
                             )
                         }

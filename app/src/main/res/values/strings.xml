@@ -234,5 +234,28 @@
     <string name="create_passcode">Create Passcode</string>
     <string name="please_enter_your_passcode">Please enter your passcode</string>
 
+    <!-- About Screen -->
+    <string name="about_app_version">Version %s</string>
+    <string name="about_build_info">Build %s</string>
+    <string name="about_app_description_title">About This App</string>
+    <string name="about_app_description">Notification Show helps you manage, organize, and analyze all your notifications in one place. Never miss an important notification and keep track of your digital communication with ease.</string>
+    <string name="about_features_title">Key Features</string>
+    <string name="about_feature_notifications">Smart Notification Management</string>
+    <string name="about_feature_notifications_desc">Save, organize, and search through all your notifications effortlessly</string>
+    <string name="about_feature_groups">Custom Groups</string>
+    <string name="about_feature_groups_desc">Organize notifications by apps or create custom groups for better management</string>
+    <string name="about_feature_analytics">Analytics &amp; Insights</string>
+    <string name="about_feature_analytics_desc">Track your notification patterns and get insights into your digital habits</string>
+    <string name="about_feature_privacy">Privacy First</string>
+    <string name="about_feature_privacy_desc">All your data is stored locally on your device. We never access or share your notifications</string>
+    <string name="about_terms_of_service">Terms of Service</string>
+    <string name="about_contact_us">Contact Us</string>
+    <string name="about_rate_app">Rate App</string>
+    <string name="about_developed_by">Developed with ❤️</string>
+    <string name="about_copyright">© 2024 Notification Show. All rights reserved.</string>
+    <string name="about_privacy_policy_url">https://example.com/privacy-policy</string>
+    <string name="about_terms_url">https://example.com/terms-of-service</string>
+    <string name="about_contact_email">support@example.com</string>
+
 
 </resources>
