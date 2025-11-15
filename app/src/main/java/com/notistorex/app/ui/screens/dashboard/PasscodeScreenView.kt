@@ -331,6 +331,7 @@ private fun BackspaceButton(
                 .size(70.dp)
                 .clickable(
                     interactionSource = interactionSource,
+                    indication = null,
                     onClick = onClick
                 ),
             shape = CircleShape,
