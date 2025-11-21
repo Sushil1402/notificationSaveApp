@@ -202,6 +202,11 @@
     <string name="premium_active_title">Premium active</string>
     <string name="premium_active_subtitle">You already unlocked every feature</string>
     <string name="ads_free">Ads Free</string>
+    <string name="purchase_successful">Purchase successful! Premium features unlocked.</string>
+    <string name="purchase_failed">Purchase failed: %s</string>
+    <string name="purchaseCancelled">Purchase cancelled</string>
+    <string name="your_already_own_this_subscription">You already own this subscription</string>
+    <string name="unable_toStart_purchase">Unable to start purchase. Please try again.</string>
 
     <!-- App Selection Screen -->
     <string name="search_apps">Search apps…</string>
@@ -256,6 +261,9 @@
     <string name="about_privacy_policy_url">https://example.com/privacy-policy</string>
     <string name="about_terms_url">https://example.com/terms-of-service</string>
     <string name="about_contact_email">support@example.com</string>
+
+
+
 
 
 </resources>

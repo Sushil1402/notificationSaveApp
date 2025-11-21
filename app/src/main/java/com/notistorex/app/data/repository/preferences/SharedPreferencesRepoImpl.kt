@@ -5,6 +5,7 @@ import javax.inject.Inject
 
 class SharedPreferencesRepoImpl @Inject constructor(private val appPref: AppPreferences):SharedPreferencesRepository {
 
+
     override fun setAppSelectionCompleted(completed: Boolean) {
         appPref.setAppSelectionCompleted(completed)
     }

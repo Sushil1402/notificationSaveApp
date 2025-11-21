@@ -1,18 +1,19 @@
 package com.notistorex.app.ui.screens.dashboard
 
-import androidx.compose.foundation.background
+import android.app.Activity
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,18 +29,24 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,17 +54,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.notistorex.app.R
+import com.notistorex.app.ads.PurchaseState
 import com.notistorex.app.ui.screens.dashboard.viewmodel.PremiumViewModel
 import com.notistorex.app.ui.theme.JetpackComposeTest1Theme
 import com.notistorex.app.ui.theme.main_appColor
+import com.notistorex.app.utils.BillingConstants
+import kotlinx.coroutines.launch
+import java.time.Period
 
 @Composable
 fun AdFreeScreenView(
@@ -65,12 +77,77 @@ fun AdFreeScreenView(
     premiumViewModel: PremiumViewModel = hiltViewModel()
 ) {
     val isPremium by premiumViewModel.isPremium.collectAsState()
+    val purchaseState by premiumViewModel.purchaseState.collectAsState()
+    val subscriptionPlans by premiumViewModel.subscriptionPlans.collectAsState()
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    val planOptions = remember(subscriptionPlans) {
+        subscriptionPlans.map { plan ->
+            SubscriptionPlanOption(
+                productId = plan.productId,
+                basePlanId = plan.basePlanId,
+                offerToken = plan.offerToken,
+                title = plan.basePlanId.formatBasePlanTitle(),
+                subtitle = formatBillingPeriod(plan.billingPeriod),
+                price = plan.price,
+                rawBillingPeriod = plan.billingPeriod
+            )
+        }
+    }
+
+    var selectedPlanToken by rememberSaveable(planOptions) {
+        mutableStateOf(planOptions.firstOrNull()?.offerToken.orEmpty())
+    }
+
+    LaunchedEffect(planOptions) {
+        if (planOptions.none { it.offerToken == selectedPlanToken }) {
+            selectedPlanToken = planOptions.firstOrNull()?.offerToken.orEmpty()
+        }
+    }
+
+    LaunchedEffect(purchaseState) {
+        when (purchaseState) {
+            is PurchaseState.Success -> {
+                snackbarHostState.showSnackbar(context.getString(R.string.purchase_successful))
+                premiumViewModel.refreshPurchases()
+            }
+            is PurchaseState.Error -> {
+                val error = (purchaseState as PurchaseState.Error).message
+                snackbarHostState.showSnackbar(context.getString(R.string.purchase_failed,"$error"))
+            }
+            is PurchaseState.Cancelled -> {
+                snackbarHostState.showSnackbar(context.getString(R.string.purchaseCancelled))
+            }
+            is PurchaseState.AlreadyOwned -> {
+                snackbarHostState.showSnackbar(context.getString(R.string.your_already_own_this_subscription))
+                premiumViewModel.refreshPurchases()
+            }
+            else -> Unit
+        }
+    }
 
     AdFreeScreenContent(
         onNavigateBack = onNavigateBack,
         isPremium = isPremium,
-        onPurchase = { premiumViewModel.setPremium(true) },
-        onSelectFreePlan = { premiumViewModel.setPremium(false) }
+        isLoading = purchaseState is PurchaseState.Processing,
+        availablePlans = planOptions,
+        selectedPlanToken = selectedPlanToken,
+        onPlanSelected = { selectedPlanToken = it },
+        onPurchase = { plan ->
+            val productId = plan.productId
+            if (activity != null && plan.offerToken.isNotBlank()) {
+                premiumViewModel.purchaseSubscription(activity, productId, plan.offerToken)
+            } else {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.unable_toStart_purchase))
+                }
+            }
+        },
+        onSelectFreePlan = { premiumViewModel.setPremium(false) },
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -79,8 +156,13 @@ fun AdFreeScreenView(
 private fun AdFreeScreenContent(
     onNavigateBack: () -> Unit,
     isPremium: Boolean,
-    onPurchase: () -> Unit,
-    onSelectFreePlan: () -> Unit
+    isLoading: Boolean = false,
+    availablePlans: List<SubscriptionPlanOption>,
+    selectedPlanToken: String,
+    onPlanSelected: (String) -> Unit,
+    onPurchase: (SubscriptionPlanOption) -> Unit,
+    onSelectFreePlan: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
         topBar = {
@@ -100,37 +182,24 @@ private fun AdFreeScreenContent(
                 )
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         val featureAccent = main_appColor
-        val plans = listOf(
-            AdFreePlan(
+        val fallbackPlans = listOf(
+            SubscriptionPlanOption(
+                productId = BillingConstants.PREMIUM_PRODUCT_ID,
+                basePlanId = "default_monthly",
+                offerToken = "",
                 title = stringResource(id = R.string.ad_free_plan_monthly),
-                price = stringResource(id = R.string.ad_free_plan_monthly_price),
                 subtitle = stringResource(id = R.string.ad_free_plan_monthly_subtitle),
-                discount = null,
-                originalPrice = null
-            ),
-            AdFreePlan(
-                title = stringResource(id = R.string.ad_free_plan_semiannual),
-                price = stringResource(id = R.string.ad_free_plan_semiannual_price),
-                subtitle = stringResource(id = R.string.ad_free_plan_semiannual_subtitle),
-                discount = null,
-                originalPrice = null
-            ),
-            AdFreePlan(
-                title = stringResource(id = R.string.ad_free_plan_yearly),
-                price = stringResource(id = R.string.ad_free_plan_yearly_price),
-                subtitle = stringResource(id = R.string.ad_free_plan_yearly_subtitle),
-                discount = null,
-                originalPrice = null
+                price = stringResource(id = R.string.ad_free_plan_monthly_price),
+                rawBillingPeriod = null
             )
         )
-
-        var selectedPlanTitle by rememberSaveable {
-            mutableStateOf(plans.getOrNull(1)?.title ?: plans.first().title)
-        }
-        val selectedPlan = plans.firstOrNull { it.title == selectedPlanTitle } ?: plans.first()
+        val plans = availablePlans.takeIf { it.isNotEmpty() } ?: fallbackPlans
+        val selectedPlan = plans.firstOrNull { it.offerToken == selectedPlanToken }
+            ?: plans.firstOrNull()
 
         Column(
             modifier = Modifier
@@ -158,9 +227,9 @@ private fun AdFreeScreenContent(
                 plans.forEach { plan ->
                     PlanCard(
                         plan = plan,
-                        selected = plan.title == selectedPlanTitle,
+                        selected = plan.offerToken == selectedPlan?.offerToken,
                         accentColor = featureAccent,
-                        onClick = { selectedPlanTitle = plan.title }
+                        onClick = { onPlanSelected(plan.offerToken) }
                     )
                 }
             }
@@ -176,8 +245,9 @@ private fun AdFreeScreenContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = onPurchase,
+                    onClick = { selectedPlan?.let(onPurchase) },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading && !isPremium && selectedPlan?.offerToken?.isNotBlank() == true,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = featureAccent,
                         contentColor = Color.White
@@ -185,8 +255,20 @@ private fun AdFreeScreenContent(
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
                 ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                    }
+                    val buttonText = selectedPlan?.title ?: stringResource(id = R.string.ad_free_plan_monthly)
                     Text(
-                        text = stringResource(id = R.string.ad_free_continue_button, selectedPlan.title),
+                        text = if (isLoading) "Processing..." else stringResource(
+                            id = R.string.ad_free_continue_button,
+                            buttonText
+                        ),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -194,6 +276,7 @@ private fun AdFreeScreenContent(
                 OutlinedButton(
                     onClick = onSelectFreePlan,
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading && !isPremium,
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
                 ) {
@@ -274,7 +357,7 @@ private fun FeatureRow(text: String) {
 
 @Composable
 private fun PlanCard(
-    plan: AdFreePlan,
+    plan: SubscriptionPlanOption,
     selected: Boolean,
     accentColor: Color,
     onClick: () -> Unit
@@ -359,13 +442,46 @@ private fun PlanCard(
     }
 }
 
-private data class AdFreePlan(
+private data class SubscriptionPlanOption(
+    val productId: String,
+    val basePlanId: String,
+    val offerToken: String,
     val title: String,
-    val price: String,
     val subtitle: String,
-    val discount: String?,
-    val originalPrice: String?
+    val price: String,
+    val discount: String? = null,
+    val originalPrice: String? = null,
+    val rawBillingPeriod: String?
 )
+
+private fun String.formatBasePlanTitle(): String {
+    val normalized = lowercase()
+    return when {
+        normalized.contains("month") || normalized.contains("p1m") -> "Monthly"
+        normalized.contains("quarter") || normalized.contains("p3m") -> "Quarterly"
+        normalized.contains("6") && normalized.contains("m") -> "6 Months"
+        normalized.contains("year") || normalized.contains("p1y") -> "Yearly"
+        else -> replace('_', ' ').replaceFirstChar { it.uppercase() }
+    }
+}
+
+private fun formatBillingPeriod(isoPeriod: String): String {
+    return try {
+        val period = Period.parse(isoPeriod)
+        when {
+            period.years > 0 -> "Billed every ${period.years} year${if (period.years > 1) "s" else ""}"
+            period.months > 0 -> "Billed every ${period.months} month${if (period.months > 1) "s" else ""}"
+            period.days > 0 -> "Billed every ${period.days} day${if (period.days > 1) "s" else ""}"
+            else -> "Flexible billing"
+        }
+    } catch (e: Exception) {
+        when {
+            isoPeriod.endsWith("Y") -> "Billed yearly"
+            isoPeriod.endsWith("M") -> "Billed monthly"
+            else -> "Flexible billing"
+        }
+    }
+}
 
 @Composable
 private fun ActiveSubscriptionBanner() {
@@ -416,8 +532,32 @@ private fun AdFreeScreenPreview() {
         AdFreeScreenContent(
             onNavigateBack = {},
             isPremium = false,
+            isLoading = false,
+            availablePlans = listOf(
+                SubscriptionPlanOption(
+                    productId = BillingConstants.PREMIUM_PRODUCT_ID,
+                    basePlanId = "base_plan_monthly",
+                    offerToken = "mock-token",
+                    title = "Monthly",
+                    subtitle = "Billed every month",
+                    price = "",
+                    rawBillingPeriod = "P1M"
+                ),
+                SubscriptionPlanOption(
+                    productId = BillingConstants.PREMIUM_PRODUCT_ID,
+                    basePlanId = "base_plan_yearly",
+                    offerToken = "mock-token-2",
+                    title = "Yearly",
+                    subtitle = "Billed every year",
+                    price = "",
+                    rawBillingPeriod = "P1Y"
+                )
+            ),
+            selectedPlanToken = "mock-token",
+            onPlanSelected = {},
             onPurchase = {},
-            onSelectFreePlan = {}
+            onSelectFreePlan = {},
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }

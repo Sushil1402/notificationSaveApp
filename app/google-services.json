@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "560908118096",
+    "project_id": "notistorex",
+    "storage_bucket": "notistorex.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:560908118096:android:02cd80a3e4db7c745f4955",
+        "android_client_info": {
+          "package_name": "com.notistorex.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjbbQrpjJTw7BroSHYYjOUsqPUpPGJ2PE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

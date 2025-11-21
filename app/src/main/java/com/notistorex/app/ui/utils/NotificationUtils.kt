@@ -169,7 +169,7 @@ object NotificationUtils {
 
     fun buildForegroundNotification(context: Context, notifications: List<String>): Notification {
         val builder = NotificationCompat.Builder(context, Constants.channelNotificationAliveId)
-            .setSmallIcon(R.drawable.flower1)
+            .setSmallIcon(R.drawable.app_logo)
             .setContentTitle("Notification Service Running")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -233,13 +233,13 @@ object NotificationUtils {
                 if (bitmap != null) {
                     item.setImageViewBitmap(R.id.app_icon, bitmap)
                 } else {
-                    item.setImageViewResource(R.id.app_icon, R.drawable.flower1)
+                    item.setImageViewResource(R.id.app_icon, R.drawable.app_logo)
                 }
                 remoteViews.addView(R.id.notification_icons_container, item)
             }
         } else {
             val item = RemoteViews(context.packageName, R.layout.custom_notification_icon_item)
-            item.setImageViewResource(R.id.app_icon, R.drawable.flower1)
+            item.setImageViewResource(R.id.app_icon, R.drawable.app_logo)
             remoteViews.addView(R.id.notification_icons_container, item)
         }
 
@@ -248,7 +248,7 @@ object NotificationUtils {
         remoteViews.setTextViewText(R.id.notification_count_text, countText)
 
         return NotificationCompat.Builder(context, Constants.channelNotificationAliveId)
-            .setSmallIcon(R.drawable.flower1)
+            .setSmallIcon(R.drawable.app_logo)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(remoteViews)
             .setOngoing(true)
@@ -290,7 +290,7 @@ object NotificationUtils {
         } catch (e: Exception) {
             e.printStackTrace()
             // fallback icon
-            BitmapFactory.decodeResource(context.resources, R.drawable.flower1)
+            BitmapFactory.decodeResource(context.resources, R.drawable.app_logo)
         }
     }
 
