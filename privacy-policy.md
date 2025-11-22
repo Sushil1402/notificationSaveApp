@@ -1,7 +1,7 @@
  
 
 
-📜 NotiStoreX – Privacy Policy
+```📜 NotiStoreX – Privacy Policy```
 Effective Date: November 22, 2025
 
 Note: This Privacy Policy is written in English and is the legally binding version.
